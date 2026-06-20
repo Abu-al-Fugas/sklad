@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>СМТ Склад</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f4f7fa; --container-bg: #ffffff; --text-color: #333333; --text-muted: #6c757d;
+            --primary-color: #0d6efd; --danger-color: #dc3545; --success-color: #198754; --warning-color: #ffc107; --info-color: #17a2b8;
+            --border-color: #dee2e6; --header-bg: #212529; --header-text: #ffffff; --table-hover: #f8f9fa; --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0; --text-muted: #aaaaaa;
+            --primary-color: #3f8cff; --danger-color: #ff5252; --success-color: #2e7d32; --warning-color: #ffca28; --info-color: #00acc1;
+            --border-color: #333333; --header-bg: #000000; --header-text: #ffffff; --table-hover: #2a2a2a; --shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden;}
+        /* Сузили тестовый мобильный вид до 380px для точной имитации телефона */
+        body.mobile-view-forced main { max-width: 380px; margin: 0 auto; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); background: var(--container-bg); box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        
+        /* ШАПКА */
+        header { background-color: var(--header-bg); color: var(--header-text); padding: 0 10px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; height: 46px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .logo { font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 6px; width: 180px; white-space: nowrap;}
+        .version-badge { font-size: 0.65rem; background: var(--primary-color); padding: 2px 5px; border-radius: 8px; font-weight: normal; margin-left: 4px;}
+        .status-indicator { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px;}
+        .dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--danger-color); }
+        .dot.online { background-color: #00e676; box-shadow: 0 0 4px #00e676; }
+
+        /* ЦЕНТРОВКА ВКЛАДОК */
+        nav { display: flex; justify-content: center; flex: 1; height: 100%;}
+        nav button { background: none; border: none; border-bottom: 3px solid transparent; color: rgba(255,255,255,0.7); font-size: 0.9rem; font-weight: 500; cursor: pointer; padding: 0 12px; transition: 0.2s; height: 100%;}
+        nav button:hover { color: white; background-color: rgba(255,255,255,0.1); }
+        nav button.active { color: white; background-color: rgba(255,255,255,0.05); border-bottom-color: var(--primary-color);}
+        .header-dummy { width: 180px; } 
+
+        /* ОСНОВНОЙ БЛОК */
+        main { padding: 8px; max-width: 1400px; margin: 0 auto; flex: 1; width: 100%;}
+        .tab-content { display: none; animation: fadeIn 0.15s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; background: var(--container-bg); padding: 6px; border-radius: 4px; box-shadow: var(--shadow);}
+        .filters, .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+        
+        button.btn { padding: 6px 12px; border: none; border-radius: 3px; cursor: pointer; font-size: 0.85rem; color: white; font-weight: 500; transition: 0.2s;}
+        .btn-primary { background-color: var(--primary-color); } .btn-danger { background-color: var(--danger-color); }
+        .btn-success { background-color: var(--success-color); } .btn-warning { background-color: var(--warning-color); color: #000; }
+        .btn-small { padding: 3px 8px; font-size: 0.8rem; }
+        .btn:hover { opacity: 0.9; }
+        
+        input, select, textarea { padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 3px; background: var(--container-bg); color: var(--text-color); font-size: 0.9rem; min-height: 34px; box-sizing: border-box;}
+        input[disabled] { opacity: 0.5; cursor: not-allowed; }
+        
+        /* УЛЬТРАКОМПАКТНЫЕ ТАБЛИЦЫ */
+        .table-responsive { width: 100%; overflow-x: auto; background: var(--container-bg); border-radius: 4px; box-shadow: var(--shadow); -webkit-overflow-scrolling: touch;}
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; word-break: break-word;}
+        th { background-color: var(--header-bg); color: white; font-weight: 500; white-space: nowrap;}
+        tr:hover { background-color: var(--table-hover); }
+        
+        .group-header { background-color: var(--border-color) !important; font-weight: bold; font-size: 0.85rem; padding: 6px 8px;}
+        .text-right { text-align: right; }
+        .negative-stock { color: var(--danger-color); font-weight: bold; }
+        
+        .installer-stock-list { margin: 0; padding: 0; list-style: none; font-size: 0.8rem;}
+        .installer-stock-list li { margin-bottom: 1px; padding-bottom: 2px; border-bottom: 1px dashed var(--border-color); }
+        .installer-stock-list li:last-child { border-bottom: none; }
+        .clickable-total { color: var(--primary-color); cursor: pointer; font-weight: bold; border-bottom: 1px dashed var(--primary-color); display: inline-block; padding-bottom: 1px;}
+
+        /* ГРУППЫ ДВИЖЕНИЙ (СПОЙЛЕРЫ) */
+        .movement-group { background: var(--container-bg); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 6px; box-shadow: var(--shadow); overflow: hidden; }
+        .movement-group summary { padding: 10px; font-size: 0.9rem; font-weight: 500; cursor: pointer; background: var(--table-hover); display: flex; align-items: center; justify-content: space-between; user-select: none; }
+        .movement-group summary:hover { background: var(--border-color); }
+        .movement-group summary::marker { color: var(--primary-color); font-size: 1.1em;} 
+        .movement-group summary::-webkit-details-marker { color: var(--primary-color); }
+        .movement-details-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; border-top: 1px solid var(--border-color); }
+        .movement-details-table th, .movement-details-table td { padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .movement-details-table th { background: rgba(0,0,0,0.03); color: var(--text-color); font-weight: 600; }
+        .movement-badge { padding: 2px 4px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; display: inline-block; text-align: center; line-height: 1.1;}
+
+        /* СТРОКИ МОДАЛЬНЫХ ОКОН */
+        .mass-issue-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.02); margin-bottom: 2px; border-radius: 3px; opacity: 0.5; transition: 0.15s; min-height: 32px;}
+        .mass-issue-item.selected { opacity: 1; background: var(--container-bg); border-left: 4px solid var(--primary-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        [data-theme="dark"] .mass-issue-item { background: rgba(255,255,255,0.02); }
+        [data-theme="dark"] .mass-issue-item.selected { background: var(--container-bg); border-color: var(--primary-color);}
+        .mass-issue-item label { flex-grow: 1; margin: 0 6px; cursor: pointer; font-size: 0.85rem; user-select: none;}
+        .mass-issue-item input[type="number"] { width: 70px; text-align: right; padding: 4px; height: 28px;}
+
+        .edit-stock-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 2px; background: var(--container-bg); border-radius: 3px; min-height: 32px;}
+        .edit-stock-item label { font-size: 0.85rem; flex-grow: 1;}
+        .edit-stock-item input { width: 70px; text-align: right; padding: 4px; height: 28px; border: 1px solid var(--border-color);}
+
+        /* ПОДВАЛ */
+        footer { background: var(--header-bg); padding: 8px 15px; display: flex; justify-content: center; gap: 10px; margin-top: auto;}
+        .footer-btn { background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem; font-weight: 500;}
+        .footer-btn:hover { background: rgba(255,255,255,0.1); border-color: white;}
+
+        /* МОДАЛКИ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--container-bg); padding: 16px; border-radius: 4px; width: 95%; max-width: 480px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.05rem; font-weight: bold; }
+        .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 0;}
+        .modal-body { overflow-y: auto; padding-right: 4px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.8rem; color: var(--text-muted);}
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+        .hidden { display: none !important; }
+        
+        #loadingOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--header-bg); z-index:9999; display:flex; flex-direction: column; justify-content:center; align-items:center; color:white; font-size:1rem; font-weight:bold; }
+        
+        /* МЕДИАЗАПРОС ДЛЯ ТЕЛЕФОНОВ (Жесткая адаптация) */
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 0; height: auto; padding: 4px; }
+            .logo, .header-dummy { width: 100%; justify-content: center; margin-top: 2px; margin-bottom: 6px; font-size: 1.05rem;}
+            .header-dummy { display: none; }
+            nav { justify-content: space-between; width: 100%;}
+            nav button { flex: 1; padding: 6px 2px; text-align: center; font-size: 0.8rem;}
+            
+            .controls { flex-direction: column; padding: 6px;}
+            .btn-group, .filters { flex-direction: column; width: 100%; gap: 4px; }
+            .btn-group button, .filters input, .filters select { width: 100%; }
+            .btn { padding: 6px 8px; font-size: 0.85rem; }
+            .btn-small { padding: 4px; font-size: 0.75rem; }
+            
+            table { font-size: 0.75rem; }
+            /* Убираем запрет на перенос строк в шапке, сильно сужаем отступы */
+            th { white-space: normal !important; word-wrap: break-word; line-height: 1.1; font-size: 0.7rem; }
+            th, td { padding: 4px 2px; }
+            
+            .hide-mobile { display: none !important; }
+            .modal { width: 98%; padding: 12px; }
+            .mass-issue-item label { font-size: 0.75rem; }
+            .mass-issue-item input[type="number"] { width: 55px; padding: 2px; }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        window.onerror = function(message) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) { overlay.innerHTML = `<div style="background: white; color: black; padding: 15px; border-radius: 4px; text-align: center;"><h3 style="color: #dc3545; margin-top:0;">❌ Ошибка</h3><p>${message}</p></div>`; }
+            return false;
+        };
+    </script>
+
+    <div id="loadingOverlay"><div>🔄 Подключение к базе данных...</div></div>
+
+    <header>
+        <div class="logo">
+            СМТ Склад <span class="version-badge">v2.5</span>
+            <div class="status-indicator"><div class="dot" id="connDot"></div><span id="connText">...</span></div>
+        </div>
+        <nav>
+            <button class="tab-btn active" data-target="materials">Остатки</button>
+            <button class="tab-btn" data-target="installers">Монтажники</button>
+            <button class="tab-btn" data-target="movements">Движение</button>
+            <button class="tab-btn" data-target="reports" style="color:var(--warning-color);">📊 Отчеты</button>
+        </nav>
+        <div class="header-dummy"></div>
+    </header>
+
+    <main>
+        <section id="materials" class="tab-content active">
+            <div class="controls">
+                <button class="btn btn-primary" onclick="openModal('materialModal')">+ Добавить материал</button>
+                <div class="filters"><input type="text" id="searchMaterial" placeholder="Поиск по названию..." onkeyup="renderMaterials()"></div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Материал</th>
+                            <th class="text-right">Склад</th>
+                            <th class="text-right">На руках</th>
+                            <th class="text-right">Всего</th>
+                            <th class="text-right" style="width: 55px;">Действ.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="installers" class="tab-content">
+            <div class="controls"><button class="btn btn-primary" onclick="openModal('installerModal')">+ Добавить монтажника</button></div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>Монтажник</th><th>№ телефона</th><th>На руках</th><th class="text-right" style="width: 55px;">Действ.</th></tr>
+                    </thead>
+                    <tbody id="installersListBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="movements" class="tab-content">
+            <div class="controls">
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="openModal('movementModal')">+ Одиночная</button>
+                    <button class="btn btn-warning" onclick="openMassIssueModal()">📦 Массовая</button>
+                    <button class="btn btn-success" onclick="openInstallationModal()">🔧 Установка</button>
+                </div>
+                <div class="filters">
+                    <input type="date" id="filterMovDateFrom" onchange="renderMovements()">
+                    <input type="date" id="filterMovDateTo" onchange="renderMovements()">
+                    <select id="filterMovMaterial" onchange="renderMovements()"><option value="">Все материалы</option></select>
+                    <select id="filterMovInstaller" onchange="renderMovements()"><option value="">Все монтажники</option></select>
+                    <input type="text" id="searchMovement" placeholder="Поиск коммент..." onkeyup="renderMovements()">
+                </div>
+            </div>
+            
+            <div id="movementsContainer"></div>
+        </section>
+
+        <section id="reports" class="tab-content">
+            <div class="controls">
+                <div class="filters">
+                    <label style="font-weight:bold; margin-right:5px; align-self:center; font-size:0.9rem;">Месяц отчета:</label>
+                    <input type="month" id="reportMonth" onchange="renderReports()">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>Монтажник</th><th class="text-right">Счетчиков</th><th class="text-right">Действия</th></tr>
+                    </thead>
+                    <tbody id="reportsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <button class="footer-btn" onclick="toggleMobileView()">📱 Мобильный вид (ПК)</button>
+        <button class="footer-btn" onclick="toggleTheme()">🌓 Тема</button>
+    </footer>
+
+    <div class="modal-overlay" id="movementModal">
+        <div class="modal">
+            <div class="modal-header"><span id="movementModalTitle">Операция</span><button class="modal-close" onclick="closeModal('movementModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="movId">
+                <div class="form-group"><label>Дата</label><input type="datetime-local" id="movDate" required></div>
+                <div class="form-group"><label>Материал</label><select id="movMaterial"></select></div>
+                <div class="form-group">
+                    <label>Тип операции</label>
+                    <select id="movType" onchange="toggleMovementFields()">
+                        <option value="Приход">Приход (На склад)</option>
+                        <option value="Выдача монтажнику">Выдача монтажнику (Со склада)</option>
+                        <option value="Возврат от монтажника">Возврат от монтажника (На склад)</option>
+                        <option value="Списание">Списание (Со склада)</option>
+                        <option value="Корректировка">Корректировка (Изменить факт. остаток склада)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Количество</label><input type="number" id="movQty" min="0" step="1"></div>
+                <div class="form-group" id="groupInstaller"><label>Монтажник</label><select id="movInstaller"></select></div>
+                <div class="form-group"><label>Комментарий</label><input type="text" id="movComment"></div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('movementModal')">Отмена</button><button class="btn btn-primary" onclick="saveMovement(null)">Сохранить</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="massIssueModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header"><span>Массовая операция</span><button class="modal-close" onclick="closeModal('massIssueModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Дата</label><input type="datetime-local" id="massDate"></div>
+                <div class="form-group">
+                    <label>Тип операции</label>
+                    <select id="massOpType" onchange="toggleMassFields()">
+                        <option value="Выдача монтажнику">Выдача монтажнику (Со склада)</option>
+                        <option value="Возврат от монтажника">Возврат от монтажника (На склад)</option>
+                        <option value="Приход">Приход (На склад)</option>
+                        <option value="Списание">Списание (Со склада)</option>
+                        <option value="Корректировка">Корректировка (Изменить факт. остаток склада)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="massGroupInstaller"><label>Монтажник</label><select id="massInstaller"></select></div>
+                <div class="form-group"><label>Комментарий (общий)</label><input type="text" id="massComment"></div>
+                
+                <div style="font-weight:bold; margin: 12px 0 6px 0; font-size:0.85rem;">Отметьте материалы:</div>
+                <div id="massIssueMaterialsList" style="border: 1px solid var(--border-color); border-radius:3px; padding: 4px; max-height: 250px; overflow-y:auto; background: var(--bg-color);"></div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('massIssueModal')">Отмена</button><button class="btn btn-warning" onclick="saveMassIssue()">Провести операцию</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="installModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><span>Установка (Счетчик+КМЧ)</span><button class="modal-close" onclick="closeModal('installModal')">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Дата установки</label><input type="datetime-local" id="instOpDate"></div>
+                <div class="form-group"><label>Монтажник</label><select id="instOpInstaller" onchange="renderInstallerMeters()"></select></div>
+                
+                <div class="form-group">
+                    <label>Счетчики для установки (отметьте нужные)</label>
+                    <div id="instOpMetersList" style="border: 1px solid var(--border-color); border-radius:3px; padding: 4px; max-height: 250px; overflow-y:auto; background: var(--bg-color);">
+                        <div style="padding:6px; font-size:0.85rem; color:var(--text-muted);">Сначала выберите монтажника</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('installModal')">Отмена</button><button class="btn btn-success" onclick="saveInstallation()">Списать комплекты</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="materialModal">
+        <div class="modal">
+            <div class="modal-header"><span id="materialModalTitle">Материал</span><button class="modal-close" onclick="closeModal('materialModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="matId">
+                <div class="form-group"><label>Наименование</label><input type="text" id="matName"></div>
+                <div class="form-group"><label>Начальный остаток склада</label><input type="number" id="matInitialStock" value="0" min="0" step="1"></div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('materialModal')">Отмена</button><button class="btn btn-primary" onclick="saveMaterial()">Сохранить</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="installerModal">
+        <div class="modal">
+            <div class="modal-header"><span id="installerModalTitle">Монтажник</span><button class="modal-close" onclick="closeModal('installerModal')">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="instId">
+                <div class="form-group"><label>ФИО</label><input type="text" id="instName"></div>
+                <div class="form-group"><label>№ телефона / Коммент</label><input type="text" id="instPhone"></div>
+                
+                <div id="installerEditStocksContainer" class="hidden">
+                    <hr style="border:0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+                    <div style="font-weight:bold; margin-bottom:6px; font-size:0.85rem;">Остатки на руках (Влияет на склад!):</div>
+                    <div id="installerEditStocks" style="max-height: 220px; overflow-y:auto; border: 1px solid var(--border-color); padding: 4px; border-radius: 3px; background: var(--bg-color);"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal('installerModal')">Отмена</button><button class="btn btn-primary" onclick="saveInstaller()">Сохранить</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="installerDetailsModal">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header"><span id="installerDetailsTitle" style="font-size:1rem; padding-right:10px;">Детализация</span><button class="modal-close" onclick="closeModal('installerDetailsModal')">&times;</button></div>
+            <div class="modal-body" id="installerDetailsBody"></div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('installerDetailsModal')">Закрыть</button></div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvo10dq0VkZeBaP-Cv3GVIJfEW23QzKIk",
+            authDomain: "smt-sklad-8f993.firebaseapp.com",
+            databaseURL: "https://smt-sklad-8f993-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "smt-sklad-8f993",
+            storageBucket: "smt-sklad-8f993.firebasestorage.app",
+            messagingSenderId: "541634074689",
+            appId: "1:541634074689:web:625e141e5548e7fbcc4ec0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dbRef = database.ref('smt_inventory');
+
+        let db = { materials: [], installers: [], movements: [], reports: [], meta_flags: {} };
+        let currentReportView = {}; 
+        
+        const sizeMapping = { '4': 20, '6': 20, '10': 25, '16': 25, '25': 32, '40': 40, '65': 50, '100': 80 };
+
+        firebase.database().ref('.info/connected').on('value', snap => {
+            const dot = document.getElementById('connDot'), text = document.getElementById('connText');
+            if (snap.val() === true) { dot.classList.add('online'); text.innerText = 'В сети'; text.style.color = '#00e676'; } 
+            else { dot.classList.remove('online'); text.innerText = 'Офлайн'; text.style.color = 'var(--text-muted)'; }
+        });
+
+        dbRef.on('value', snap => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            const data = snap.val();
+            if (data) {
+                db = data;
+                if (!db.materials) db.materials = [];
+                if (!db.installers) db.installers = [];
+                if (!db.movements) db.movements = [];
+                if (!db.reports) db.reports = [];
+                if (!db.meta_flags) db.meta_flags = {};
+                
+                if (!db.meta_flags.reportsMigrated) {
+                    db.movements.forEach(m => {
+                        if (m.type === 'Установка') {
+                            db.reports.push({ id: m.id, date: m.date, materialId: m.materialId, qty: m.qty, installerId: m.installerId });
+                        }
+                    });
+                    db.meta_flags.reportsMigrated = true;
+                    pushToCloud();
+                }
+            }
+            updateSelects(); 
+            renderAll();
+            
+            if (document.getElementById('installerDetailsModal').classList.contains('active') && currentReportView.installerId) {
+                showReportDetails(currentReportView.name, currentReportView.installerId, currentReportView.monthVal);
+            }
+        }, err => {
+            document.getElementById('loadingOverlay').innerHTML = `<div style="background: white; color: black; padding: 20px; border-radius: 4px; text-align: center;"><h3 style="color: #dc3545; margin-top:0;">❌ Ошибка доступа</h3><p>${err.message}</p></div>`;
+        });
+
+        window.pushToCloud = function() {
+            dbRef.set(db).catch(e => alert("Ошибка сохранения: " + e.message));
+        }
+
+        // ==========================================
+        // БЕЗОПАСНАЯ МАТЕМАТИКА И АНАЛИЗ
+        // ==========================================
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+        function getNowISO() { const n = new Date(); n.setMinutes(n.getMinutes() - n.getTimezoneOffset()); return n.toISOString().slice(0,16); }
+        
+        function ddmmyyyy(dateStr) {
+            if(!dateStr) return '';
+            let p = dateStr.split('-');
+            if(p.length >= 3) return `${p[2].substring(0,2)}.${p[1]}.${p[0]}`;
+            return dateStr;
+        }
+
+        function formatDate(ds) { if(!ds) return ""; return new Date(ds).toLocaleString('ru-RU', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'}); }
+        
+        function safeNum(val) { 
+            if (typeof val === 'string') val = val.replace(',', '.');
+            let n = parseFloat(val); 
+            return isNaN(n) ? 0 : Math.round(n * 1000) / 1000; 
+        }
+        
+        function fmtQty(val) {
+            let n = safeNum(val);
+            return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function analyzeMaterial(name) {
+            let catId = 3, catName = 'Другое', size = 999, low = (name || "").toLowerCase();
+            if (low.includes('смт') || low.includes('счетчик')) { catId = 1; catName = 'Счетчики газа'; }
+            else if (low.includes('кмч')) { catId = 2; catName = 'КМЧ'; }
+            
+            const gMatch = low.match(/g(\d+)/);
+            if (gMatch) { size = sizeMapping[gMatch[1]] || parseInt(gMatch[1]); } 
+            else { const duMatch = low.match(/(?:к-|а-|ф-|кмч-|кмч-ф-)\s*(\d+(\.\d+)?)/); if (duMatch) size = parseFloat(duMatch[1]); }
+            return { catId, catName, size };
+        }
+
+        function getSortedMaterials() {
+            return [...db.materials].map(m => ({ ...m, meta: analyzeMaterial(m.name) })).sort((a, b) => a.meta.catId - b.meta.catId || a.meta.size - b.meta.size || a.name.localeCompare(b.name));
+        }
+
+        function getMaterialName(id) { const m = db.materials.find(x => x.id === id); return m ? m.name : "Удалено"; }
+        function getInstallerName(id) { if (!id) return "-"; const i = db.installers.find(x => x.id === id); return i ? i.name : "Удалено"; }
+
+        function calculateStocks() {
+            let warehouse = {}, installers = {};
+            db.materials.forEach(m => warehouse[m.id] = safeNum(m.initialStock));
+            
+            [...db.movements].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(mov => {
+                let mId = mov.materialId, iId = mov.installerId, q = safeNum(mov.qty);
+                if (q === 0) return; 
+                
+                if (iId) { if (!installers[iId]) installers[iId] = {}; if (installers[iId][mId] === undefined) installers[iId][mId] = 0; }
+                
+                switch (mov.type) {
+                    case 'Приход': 
+                        warehouse[mId] = safeNum(warehouse[mId] + q); 
+                        break;
+                    case 'Списание': 
+                        warehouse[mId] = safeNum(warehouse[mId] - q); 
+                        break;
+                    case 'Выдача монтажнику': 
+                        warehouse[mId] = safeNum(warehouse[mId] - q); 
+                        if(iId) installers[iId][mId] = safeNum(installers[iId][mId] + q);
+                        break;
+                    case 'Возврат от монтажника': 
+                        warehouse[mId] = safeNum(warehouse[mId] + q); 
+                        if(iId) installers[iId][mId] = safeNum(installers[iId][mId] - q);
+                        break;
+                    case 'Установка': 
+                        if(iId) installers[iId][mId] = safeNum(installers[iId][mId] - q);
+                        break;
+                    case 'Корректировка': 
+                        warehouse[mId] = q; 
+                        break;
+                }
+            });
+            return { warehouse, installers };
+        }
+
+        // ==========================================
+        // РЕНДЕР
+        // ==========================================
+        function renderMaterials() {
+            const tbody = document.getElementById('materialsTableBody'), search = document.getElementById('searchMaterial').value.toLowerCase(), stocks = calculateStocks();
+            let displayList = getSortedMaterials();
+            if (search) displayList = displayList.filter(m => m.name.toLowerCase().includes(search));
+
+            let catTotals = {};
+            let html = '', currentCat = '';
+            
+            displayList.forEach(m => {
+                // Инициализируем сумму категории
+                if(!catTotals[m.meta.catName]) catTotals[m.meta.catName] = { all: 0 };
+
+                if (m.meta.catName !== currentCat && !search) { 
+                    html += `<tr class="group-header"><td colspan="5">📁 ${m.meta.catName}</td></tr>`; 
+                    currentCat = m.meta.catName; 
+                }
+                
+                let currentStock = stocks.warehouse[m.id] || 0, totalInstStock = 0, hoverLines = [];
+                for(let instId in stocks.installers) {
+                    let q = stocks.installers[instId][m.id] || 0; 
+                    if(q > 0) { totalInstStock = safeNum(totalInstStock + q); hoverLines.push(`${getInstallerName(instId)}: ${fmtQty(q)} шт.`); }
+                }
+                
+                let totalAll = safeNum(currentStock + totalInstStock);
+                
+                // Добавляем к сумме категории
+                catTotals[m.meta.catName].all = safeNum(catTotals[m.meta.catName].all + totalAll);
+
+                let instHTML = '<span style="color:var(--text-muted)">0</span>';
+                if (totalInstStock > 0) instHTML = `<span class="clickable-total" title="${hoverLines.join('\n')}" onclick="showInstallerDetails('${m.id}')">${fmtQty(totalInstStock)} шт</span>`;
+                
+                html += `<tr>
+                    <td>${m.name}</td>
+                    <td class="text-right ${currentStock < 0 ? 'negative-stock' : ''}"><b>${fmtQty(currentStock)}</b></td>
+                    <td class="text-right">${instHTML}</td>
+                    <td class="text-right" style="color:var(--info-color); font-weight:bold;">${fmtQty(totalAll)}</td>
+                    <td class="text-right">
+                        <div style="display:flex; justify-content:flex-end; gap:2px;">
+                            <button class="btn btn-warning btn-small" onclick="editMaterial('${m.id}')">✎</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteMaterial('${m.id}')">✕</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            // Вывод раздельных итогов внизу (только в столбце "Всего")
+            if (displayList.length > 0) {
+                let sortedCats = Object.keys(catTotals).sort();
+                sortedCats.forEach(cat => {
+                    if (catTotals[cat].all > 0) {
+                        html += `<tr style="background:var(--header-bg); color:white; font-weight:bold; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <td colspan="3" style="text-align:right;">ИТОГО ${cat}:</td>
+                            <td class="text-right">${fmtQty(catTotals[cat].all)}</td>
+                            <td></td>
+                        </tr>`;
+                    }
+                });
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function showInstallerDetails(matId) {
+            const stocks = calculateStocks().installers;
+            let html = '<ul class="installer-stock-list">', count = 0;
+            for(let instId in stocks) { let q = stocks[instId][matId] || 0; if (q > 0) { html += `<li><b>${getInstallerName(instId)}</b>: ${fmtQty(q)} шт.</li>`; count++; } }
+            html += '</ul>'; if (count === 0) html = '<i>Нет данных</i>';
+            document.getElementById('installerDetailsTitle').innerText = getMaterialName(matId);
+            document.getElementById('installerDetailsBody').innerHTML = html;
+            openModal('installerDetailsModal');
+        }
+
+        function renderInstallers() {
+            const tbody = document.getElementById('installersListBody');
+            const stocks = calculateStocks().installers;
+            
+            let sortedInstallers = [...db.installers].sort((a,b) => a.name.localeCompare(b.name));
+            
+            tbody.innerHTML = sortedInstallers.map(inst => {
+                let itemsHtml = "<i>Пусто</i>";
+                if (stocks[inst.id]) { 
+                    let sortedMats = getSortedMaterials();
+                    let curCat = '';
+                    let list = [];
+                    let totalItemsCount = 0;
+                    
+                    sortedMats.forEach(m => {
+                        let q = stocks[inst.id][m.id] || 0;
+                        if(q > 0) {
+                            if(m.meta.catName !== curCat) {
+                                list.push(`<li style="background:rgba(0,0,0,0.05); padding:2px 4px; font-weight:bold; font-size:0.75rem; color:var(--text-muted); border-bottom:1px solid var(--border-color); text-align:center; margin-top:6px;">${m.meta.catName}</li>`);
+                                curCat = m.meta.catName;
+                            }
+                            list.push(`<li style="display:flex; justify-content:space-between; padding:2px 4px;"><span>${m.name}</span> <b>${fmtQty(q)} шт</b></li>`);
+                            totalItemsCount += safeNum(q);
+                        }
+                    });
+                    
+                    if(list.length > 0) {
+                        itemsHtml = `
+                        <details class="movement-group" style="margin-bottom: 0; box-shadow: none;">
+                            <summary style="padding: 6px 8px; font-size: 0.85rem;">
+                                <span style="font-weight: 500;">Показать материалы</span>
+                                <span style="color:var(--text-muted); font-size:0.8rem;">Всего: ${fmtQty(totalItemsCount)} шт ▾</span>
+                            </summary>
+                            <div style="padding: 4px;">
+                                <ul class="installer-stock-list" style="margin:0; padding:0; list-style:none;">${list.join('')}</ul>
+                            </div>
+                        </details>`;
+                    }
+                }
+                return `<tr>
+                    <td style="vertical-align:top;"><b>${inst.name}</b></td>
+                    <td style="vertical-align:top; font-size:0.8rem;">${inst.phone||'-'}</td>
+                    <td style="vertical-align:top; padding:4px 2px;">${itemsHtml}</td>
+                    <td class="text-right" style="vertical-align:top;">
+                        <div style="display:flex; justify-content:flex-end; gap:2px;">
+                            <button class="btn btn-warning btn-small" onclick="editInstaller('${inst.id}')">✎</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteInstaller('${inst.id}')">✕</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderMovements() {
+            const container = document.getElementById('movementsContainer');
+            let openSpoilers = [];
+            document.querySelectorAll('#movementsContainer .movement-group[open]').forEach(d => openSpoilers.push(d.dataset.key));
+
+            const df = document.getElementById('filterMovDateFrom').value;
+            const dt = document.getElementById('filterMovDateTo').value;
+            const fm = document.getElementById('filterMovMaterial').value;
+            const fi = document.getElementById('filterMovInstaller').value;
+            const s = document.getElementById('searchMovement').value.toLowerCase();
+            
+            let list = [...db.movements].sort((a, b) => new Date(b.date) - new Date(a.date));
+            list = list.filter(m => {
+                if (df && m.date.substring(0,10) < df) return false; 
+                if (dt && m.date.substring(0,10) > dt) return false; 
+                if (fm && m.materialId !== fm) return false; 
+                if (fi && m.installerId !== fi) return false;
+                if (s && !( (m.comment||'') + ' ' + (m.type||'') ).toLowerCase().includes(s)) return false; 
+                return true;
+            });
+
+            if (list.length === 0) { 
+                container.innerHTML = '<div style="padding:15px; text-align:center; background:var(--container-bg); border-radius:4px; margin-top:10px;">Нет данных по заданным фильтрам</div>'; 
+                return; 
+            }
+
+            let grouped = {};
+            list.forEach(m => {
+                let day = m.date.substring(0, 10);
+                let inst = m.installerId || 'Склад';
+                let key = `${day}_${inst}`;
+                if(!grouped[key]) grouped[key] = { date: day, installerId: m.installerId, installerName: getInstallerName(m.installerId), movs: [] };
+                grouped[key].movs.push(m);
+            });
+
+            let html = '';
+            let sortedKeys = Object.keys(grouped).sort((a,b) => b.localeCompare(a)); 
+
+            sortedKeys.forEach(key => {
+                let g = grouped[key];
+                let dateFmt = ddmmyyyy(g.date);
+                let opCount = g.movs.length;
+                
+                html += `
+                <details class="movement-group" data-key="${key}">
+                    <summary style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding: 8px;">
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="display:flex; gap: 8px; align-items:center;">
+                                <b style="color:var(--primary-color);">${dateFmt}</b>
+                                <span style="font-size:0.85rem;">👤 ${g.installerId ? g.installerName.split(' ')[0] : 'Склад'}</span>
+                            </span>
+                            <span style="color:var(--text-muted); font-size:0.8rem;">${opCount} опер. ▾</span>
+                        </div>
+                        <div style="width:100%; display:flex; justify-content:flex-end;">
+                            <button class="btn btn-danger btn-small" style="padding: 2px 6px; font-size:0.7rem;" onclick="event.preventDefault(); deleteMovementGroup('${key}')" title="Удалить все операции в этой группе">🗑️ Удалить группу</button>
+                        </div>
+                    </summary>
+                    <div style="overflow-x:auto;">
+                        <table class="movement-details-table">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Материал</th>
+                                    <th>Операция</th>
+                                    <th class="text-right">Кол-во</th>
+                                    <th class="hide-mobile">Комментарий</th>
+                                    <th class="text-right">Удал.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${g.movs.map(m => {
+                                    let badgeStyle = m.type.includes('Установка') ? 'background:var(--success-color);color:white;' : 'background:rgba(0,0,0,0.06); border: 1px solid var(--border-color);';
+                                    let time = new Date(m.date).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                                    return `<tr>
+                                        <td>${time}</td>
+                                        <td><b style="font-size:0.75rem;">${getMaterialName(m.materialId)}</b></td>
+                                        <td><span class="movement-badge" style="${badgeStyle}">${m.type}</span></td>
+                                        <td class="text-right"><b style="font-size:0.9rem;">${fmtQty(m.qty)}</b></td>
+                                        <td class="hide-mobile">${m.comment||'-'}</td>
+                                        <td class="text-right"><button class="btn btn-danger btn-small" style="padding: 4px 6px;" onclick="deleteMovement('${m.id}')">✕</button></td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>`;
+            });
+            container.innerHTML = html;
+
+            openSpoilers.forEach(key => {
+                let d = document.querySelector(`.movement-group[data-key="${key}"]`);
+                if (d) d.setAttribute('open', '');
+            });
+        }
+
+        // ==========================================
+        // ОТЧЕТЫ (ЗАРПЛАТА И ДЕТАЛИЗАЦИЯ ИЗ НЕЗАВИСИМОЙ БАЗЫ)
+        // ==========================================
+        function renderReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            let monthVal = document.getElementById('reportMonth').value; 
+            if (!monthVal) return;
+
+            let stats = {};
+            db.installers.forEach(i => stats[i.id] = { name: i.name, count: 0 });
+
+            db.reports.forEach(r => {
+                if (r.date.startsWith(monthVal)) {
+                    let mat = db.materials.find(x => x.id === r.materialId);
+                    if (mat && analyzeMaterial(mat.name).catId === 1) { 
+                        if (stats[r.installerId]) {
+                            stats[r.installerId].count = safeNum(stats[r.installerId].count + safeNum(r.qty));
+                        }
+                    }
+                }
+            });
+
+            let html = '';
+            for (let id in stats) {
+                if (stats[id].count > 0) {
+                    html += `<tr>
+                        <td><b>${stats[id].name}</b></td>
+                        <td class="text-right"><b style="color:var(--success-color); font-size:1.1rem;">${fmtQty(stats[id].count)}</b> шт</td>
+                        <td class="text-right">
+                            <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                                <button class="btn btn-primary btn-small" onclick="showReportDetails('${stats[id].name}', '${id}', '${monthVal}')">Детализ.</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteAllInstallerReports('${id}', '${stats[id].name}', '${monthVal}')">Удалить</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+            }
+            if (html === '') html = '<tr><td colspan="3" style="text-align:center;">В этом месяце нет установок</td></tr>';
+            tbody.innerHTML = html;
+        }
+
+        function showReportDetails(name, installerId, monthVal) {
+            currentReportView = { name, installerId, monthVal };
+
+            let reports = db.reports.filter(r => r.installerId === installerId && r.date.startsWith(monthVal));
+            reports = reports.filter(r => {
+                let m = db.materials.find(x => x.id === r.materialId);
+                return m && analyzeMaterial(m.name).catId === 1;
+            });
+
+            let byDay = {};
+            reports.forEach(r => {
+                let day = r.date.substring(0, 10);
+                if (!byDay[day]) byDay[day] = [];
+                byDay[day].push(r);
+            });
+
+            let html = '<ul class="installer-stock-list" style="font-size:0.9rem;">';
+            
+            Object.keys(byDay).sort().forEach(d => {
+                html += `<li style="background:var(--table-hover); padding:6px; margin-top:8px; font-weight:bold; border-radius:3px; color:var(--primary-color);">📅 ${ddmmyyyy(d)}</li>`;
+                
+                byDay[d].forEach(r => {
+                    let matName = getMaterialName(r.materialId);
+                    html += `<li style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; border-bottom:1px solid var(--border-color);">
+                        <span>${matName}</span> 
+                        <span style="display:flex; gap:10px; align-items:center;">
+                            <b style="color:var(--success-color);">${fmtQty(r.qty)} шт</b>
+                            <button class="btn btn-danger btn-small" style="padding: 2px 6px; font-size:0.7rem;" title="Удалить только из отчетов" onclick="deleteReportRecord('${r.id}')">✕</button>
+                        </span>
+                    </li>`;
+                });
+            });
+            html += '</ul>';
+            if (reports.length === 0) html = '<i>Нет данных</i>';
+
+            document.getElementById('installerDetailsTitle').innerText = 'Установки: ' + name;
+            document.getElementById('installerDetailsBody').innerHTML = html;
+            openModal('installerDetailsModal');
+        }
+
+        function deleteReportRecord(id) {
+            if (confirm("Точно удалить эту установку из ОТЧЕТОВ?\n(Она удалится из расчета зарплаты, но остатки на складе не изменятся)")) {
+                db.reports = db.reports.filter(x => x.id !== id);
+                pushToCloud();
+            }
+        }
+
+        function deleteAllInstallerReports(installerId, installerName, monthVal) {
+            let ans = prompt(`ВНИМАНИЕ!\nУдалить ВСЕ установки для монтажника "${installerName}" за месяц (${monthVal}) из отчетов?\nОстатки на складе при этом НЕ изменятся.\n\nДля подтверждения введите слово "удалить":`);
+            if(ans && ans.trim().toLowerCase() === 'удалить') {
+                db.reports = db.reports.filter(r => !(r.installerId === installerId && r.date.startsWith(monthVal)));
+                pushToCloud();
+            } else if (ans !== null) {
+                alert("Удаление отменено.");
+            }
+        }
+
+        function updateSelects() {
+            let optHtml = '', curCat = '';
+            getSortedMaterials().forEach(m => {
+                if(m.meta.catName !== curCat) { if(curCat) optHtml += '</optgroup>'; optHtml += `<optgroup label="${m.meta.catName}">`; curCat = m.meta.catName; }
+                optHtml += `<option value="${m.id}">${m.name}</option>`;
+            }); if(curCat) optHtml += '</optgroup>';
+            
+            document.getElementById('movMaterial').innerHTML = optHtml; document.getElementById('filterMovMaterial').innerHTML = '<option value="">Все материалы</option>' + optHtml;
+            
+            let insts = db.installers.sort((a,b) => a.name.localeCompare(b.name)).map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+            document.getElementById('movInstaller').innerHTML = insts; document.getElementById('filterMovInstaller').innerHTML = '<option value="">Все монтажники</option>' + insts; document.getElementById('massInstaller').innerHTML = insts; document.getElementById('instOpInstaller').innerHTML = '<option value="">Выберите...</option>' + insts;
+        }
+
+        // ==========================================
+        // ЗАЩИЩЕННОЕ УДАЛЕНИЕ (МАТЕРИАЛЫ, МОНТАЖНИКИ, ДВИЖЕНИЯ)
+        // ==========================================
+        function deleteMaterial(id) { 
+            let m = db.materials.find(x => x.id === id);
+            let ans = prompt(`ВНИМАНИЕ!\nДля удаления материала "${m.name}" введите слово "удалить" (без кавычек):`);
+            if(ans && ans.trim().toLowerCase() === 'удалить') { db.materials = db.materials.filter(x => x.id!==id); pushToCloud(); } else if (ans !== null) alert("Отменено.");
+        }
+        function deleteInstaller(id) { 
+            let i = db.installers.find(x => x.id === id);
+            let ans = prompt(`ВНИМАНИЕ!\nДля удаления монтажника "${i.name}" введите слово "удалить":`);
+            if(ans && ans.trim().toLowerCase() === 'удалить') { db.installers = db.installers.filter(x => x.id!==id); pushToCloud(); } else if (ans !== null) alert("Отменено.");
+        }
+
+        function deleteMovement(id) { 
+            if(confirm('Точно удалить операцию из истории?\nЭто действие ВЕРНЕТ остатки обратно.')) { 
+                db.movements = db.movements.filter(x => x.id!==id); 
+                pushToCloud(); 
+            } 
+        }
+
+        function deleteMovementGroup(key) {
+            let ans = prompt('ВНИМАНИЕ!\nВы удаляете ВСЕ операции в этой группе. Остатки будут возвращены.\nДля подтверждения введите слово "удалить":');
+            if(ans && ans.trim().toLowerCase() === 'удалить') {
+                db.movements = db.movements.filter(m => {
+                    let mKey = m.date.substring(0, 10) + '_' + (m.installerId || 'Склад');
+                    return mKey !== key;
+                });
+                pushToCloud();
+            } else if (ans !== null) {
+                alert("Удаление отменено.");
+            }
+        }
+
+        function saveMaterial() {
+            const id = document.getElementById('matId').value, name = document.getElementById('matName').value.trim(), initialStock = safeNum(document.getElementById('matInitialStock').value);
+            if (!name) return alert('Введите имя!');
+            if (id) { let m = db.materials.find(x => x.id===id); if(m) {m.name=name; m.initialStock=initialStock;} } else db.materials.push({id: generateId(), name, initialStock});
+            closeModal('materialModal'); pushToCloud();
+        }
+
+        function saveInstaller() {
+            const id = document.getElementById('instId').value, name = document.getElementById('instName').value.trim(); if (!name) return alert('Введите ФИО!');
+            
+            if (id) { let i = db.installers.find(x => x.id===id); if(i) {i.name=name; i.phone=document.getElementById('instPhone').value;} } 
+            else { db.installers.push({id: generateId(), name, phone:document.getElementById('instPhone').value, comment:''}); }
+            
+            if (id) {
+                const globalStocks = calculateStocks();
+                const instStocks = globalStocks.installers[id] || {}; 
+                const date = getNowISO();
+                let newMovements = [], warnings = [];
+
+                getSortedMaterials().forEach(m => {
+                    const input = document.getElementById(`edit_qty_${m.id}`);
+                    if (input) {
+                        const newQty = safeNum(input.value), oldQty = safeNum(instStocks[m.id]);
+                        if (newQty > oldQty) {
+                            let diff = safeNum(newQty - oldQty);
+                            let s = globalStocks.warehouse[m.id] || 0;
+                            if (diff > s) warnings.push(`- ${m.name} (на складе: ${s})`);
+                            newMovements.push({ id: generateId(), date, materialId: m.id, type: 'Выдача монтажнику', qty: diff, installerId: id, comment: `Корректировка вручную (+${fmtQty(diff)})` }); 
+                        } else if (newQty < oldQty) {
+                            let diff = safeNum(oldQty - newQty);
+                            newMovements.push({ id: generateId(), date, materialId: m.id, type: 'Возврат от монтажника', qty: diff, installerId: id, comment: `Корректировка вручную (-${fmtQty(diff)})` }); 
+                        }
+                    }
+                });
+
+                if (warnings.length > 0) { if(!confirm(`ВНИМАНИЕ! Вы выдаете больше, чем есть на складе:\n${warnings.join('\n')}\nПродолжить в минус?`)) return; }
+                if (newMovements.length > 0) db.movements.push(...newMovements);
+            }
+            closeModal('installerModal'); pushToCloud();
+        }
+
+        function saveMovement(dataObj) {
+            let qtyInput = safeNum(document.getElementById('movQty').value);
+            let mov = dataObj || { id: document.getElementById('movId').value || generateId(), date: document.getElementById('movDate').value, materialId: document.getElementById('movMaterial').value, type: document.getElementById('movType').value, qty: qtyInput, installerId: document.getElementById('movInstaller').value, comment: document.getElementById('movComment').value };
+            
+            if (mov.qty <= 0 && mov.type !== 'Корректировка') return alert('Укажите корректное число!');
+            if (mov.type === 'Выдача монтажнику') { 
+                const s = calculateStocks().warehouse[mov.materialId] || 0; 
+                if (mov.qty > s) { if(!confirm(`Выдаем ${mov.qty} шт., на складе всего ${s} шт.\nПродолжить в минус?`)) return false; }
+            }
+            db.movements.push(mov); if(!dataObj) { closeModal('movementModal'); pushToCloud(); } return true;
+        }
+
+        // ==========================================
+        // МАССОВЫЕ ОПЕРАЦИИ И УСТАНОВКИ
+        // ==========================================
+        function toggleMassItem(id) {
+            const chk = document.getElementById(`chk_${id}`), wrap = document.getElementById(`mass_wrap_${id}`), qty = document.getElementById(`qty_${id}`);
+            qty.disabled = !chk.checked;
+            if (chk.checked) { 
+                wrap.classList.add('selected'); qty.focus(); 
+                if(!qty.value) qty.value = 1; 
+            } else { wrap.classList.remove('selected'); qty.value = ''; }
+        }
+
+        function toggleMassFields() {
+            const t = document.getElementById('massOpType').value, n = t === 'Выдача монтажнику' || t === 'Возврат от монтажника';
+            document.getElementById('massGroupInstaller').classList.toggle('hidden', !n);
+        }
+
+        function openMassIssueModal() {
+            document.getElementById('massDate').value = getNowISO(); toggleMassFields();
+            const listDiv = document.getElementById('massIssueMaterialsList'); let html = '', curCat = '';
+            getSortedMaterials().forEach(m => {
+                if(m.meta.catName !== curCat) { html += `<div class="group-header" style="padding:4px; margin-top:8px;">${m.meta.catName}</div>`; curCat = m.meta.catName; }
+                html += `<div class="mass-issue-item" id="mass_wrap_${m.id}"><input type="checkbox" id="chk_${m.id}" onchange="toggleMassItem('${m.id}')"><label for="chk_${m.id}">${m.name}</label><input type="number" id="qty_${m.id}" min="0" step="1" disabled placeholder="0"></div>`;
+            }); listDiv.innerHTML = html; openModal('massIssueModal');
+        }
+
+        function saveMassIssue() {
+            const date = document.getElementById('massDate').value, installerId = document.getElementById('massInstaller').value, comment = document.getElementById('massComment').value, type = document.getElementById('massOpType').value;
+            const n = type === 'Выдача монтажнику' || type === 'Возврат от монтажника';
+            if(n && !installerId) return alert("Выберите монтажника"); 
+            let added = 0, warnings = [], installWarns = []; const stocks = calculateStocks();
+
+            db.materials.forEach(m => {
+                const chk = document.getElementById(`chk_${m.id}`), qtyInput = document.getElementById(`qty_${m.id}`);
+                if (chk && chk.checked) { 
+                    const qty = safeNum(qtyInput.value); 
+                    if (qty > 0) { 
+                        if (type === 'Выдача монтажнику') { let s = stocks.warehouse[m.id] || 0; if (qty > s) warnings.push(`- ${m.name} (на складе: ${s})`); }
+                        if (type === 'Возврат от монтажника') { let s = stocks.installers[installerId] ? stocks.installers[installerId][m.id] || 0 : 0; if (qty > s) installWarns.push(`- ${m.name} (на руках: ${s})`); }
+                        
+                        db.movements.push({ id: generateId(), date, materialId: m.id, type: type, qty, installerId: n ? installerId : '', comment }); added++; 
+                    } 
+                }
+            });
+            if (warnings.length > 0) { if(!confirm(`ВНИМАНИЕ! Выдаем больше, чем есть на складе:\n${warnings.join('\n')}\nПродолжить в минус?`)) return; }
+            if (installWarns.length > 0) { if(!confirm(`У монтажника не хватает материалов на руках:\n${installWarns.join('\n')}\nСписать в минус?`)) return; }
+            
+            if (added > 0) { closeModal('massIssueModal'); pushToCloud(); } else alert("Укажите материалы и их количество!");
+        }
+
+        // --- МАССОВАЯ УСТАНОВКА ---
+        function toggleInstItem(id) {
+            const chk = document.getElementById(`inst_chk_${id}`), wrap = document.getElementById(`inst_wrap_${id}`), qty = document.getElementById(`inst_qty_${id}`);
+            qty.disabled = !chk.checked;
+            if (chk.checked) { wrap.classList.add('selected'); qty.focus(); if(!qty.value) qty.value = 1; } 
+            else { wrap.classList.remove('selected'); qty.value = ''; }
+        }
+
+        function openInstallationModal() { 
+            document.getElementById('instOpDate').value = getNowISO(); 
+            document.getElementById('instOpInstaller').value = ""; 
+            document.getElementById('instOpMetersList').innerHTML = '<div style="padding:6px; font-size:0.85rem; color:var(--text-muted);">Сначала выберите монтажника</div>';
+            openModal('installModal'); 
+        }
+        
+        function renderInstallerMeters() {
+            const instId = document.getElementById('instOpInstaller').value;
+            const container = document.getElementById('instOpMetersList');
+            if(!instId) { container.innerHTML = '<div style="padding:6px; font-size:0.85rem; color:var(--text-muted);">Сначала выберите монтажника</div>'; return; }
+            
+            const stocks = calculateStocks().installers[instId] || {}; 
+            let html = '';
+            
+            getSortedMaterials().forEach(mat => {
+                let q = stocks[mat.id] || 0;
+                if (q > 0 && mat.meta.catId === 1) { 
+                    html += `
+                    <div class="mass-issue-item" id="inst_wrap_${mat.id}">
+                        <input type="checkbox" id="inst_chk_${mat.id}" onchange="toggleInstItem('${mat.id}')">
+                        <label for="inst_chk_${mat.id}">${mat.name} (на руках: ${fmtQty(q)})</label>
+                        <input type="number" id="inst_qty_${mat.id}" min="1" max="${q}" step="1" disabled placeholder="0" title="Укажите количество для установки">
+                    </div>`;
+                }
+            });
+            container.innerHTML = html || '<div style="padding:8px; text-align:center; color:var(--danger-color); font-weight:bold;">Нет счетчиков на руках</div>';
+        }
+
+        function saveInstallation() {
+            const date = document.getElementById('instOpDate').value;
+            const installerId = document.getElementById('instOpInstaller').value;
+            if(!installerId) return alert("Выберите монтажника");
+            
+            let added = 0; let newMovements = []; let installWarns = []; let newReports = [];
+            const stocks = calculateStocks().installers[installerId] || {};
+
+            db.materials.forEach(m => {
+                const chk = document.getElementById(`inst_chk_${m.id}`);
+                const qtyInput = document.getElementById(`inst_qty_${m.id}`);
+                
+                if (chk && chk.checked) {
+                    const qty = safeNum(qtyInput.value);
+                    if (qty > 0) {
+                        let meterStock = stocks[m.id] || 0;
+                        if (qty > meterStock) installWarns.push(`- ${m.name} (на руках: ${meterStock})`);
+                        
+                        newMovements.push({ id: generateId(), date, materialId: m.id, type: 'Установка', qty, installerId, comment: `Установка (Счетчик)` });
+                        newReports.push({ id: generateId(), date, materialId: m.id, qty, installerId });
+                        added++;
+
+                        let targetSize = analyzeMaterial(m.name).size;
+                        if (targetSize !== 999) {
+                            let kmcMat = db.materials.find(mat => { let a = analyzeMaterial(mat.name); return a.catId === 2 && a.size === targetSize; });
+                            if (kmcMat) {
+                                let kmcStock = safeNum(stocks[kmcMat.id]);
+                                if (kmcStock < qty) { installWarns.push(`- КМЧ для него: ${kmcMat.name} (КМЧ на руках: ${kmcStock}, нужно: ${qty})`); }
+                                newMovements.push({ id: generateId(), date, materialId: kmcMat.id, type: 'Установка', qty: qty, installerId, comment: 'Автосписание КМЧ' });
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (installWarns.length > 0) { if(!confirm(`У монтажника не хватает материалов на руках:\n${installWarns.join('\n')}\nСписать в минус?`)) return; }
+            if (added > 0) { 
+                db.movements.push(...newMovements); 
+                db.reports.push(...newReports);
+                closeModal('installModal'); 
+                pushToCloud(); 
+            } else {
+                alert("Отметьте хотя бы один счетчик и укажите количество!");
+            }
+        }
+
+        // ==========================================
+        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ UI
+        // ==========================================
+        function toggleMovementFields() { const t = document.getElementById('movType').value, n = t === 'Выдача монтажнику' || t === 'Возврат от монтажника'; document.getElementById('groupInstaller').classList.toggle('hidden', !n); }
+        function editMaterial(id) { let m = db.materials.find(x=>x.id===id); if(m){ document.getElementById('matId').value=m.id; document.getElementById('matName').value=m.name; document.getElementById('matInitialStock').value=m.initialStock; openModal('materialModal'); } }
+        
+        function editInstaller(id) { 
+            let i = db.installers.find(x=>x.id===id); 
+            if(i) { 
+                document.getElementById('instId').value=i.id; document.getElementById('instName').value=i.name; document.getElementById('instPhone').value=i.phone;
+                
+                const editDiv = document.getElementById('installerEditStocks');
+                const stocks = calculateStocks().installers[id] || {}; let html = '';
+                getSortedMaterials().forEach(m => {
+                    let q = stocks[m.id] || 0;
+                    if (q > 0 || m.meta.catId === 1 || m.meta.catId === 2) { 
+                        html += `<div class="edit-stock-item"><label>${m.name}</label><input type="number" id="edit_qty_${m.id}" value="${q}" min="0" step="1"></div>`; 
+                    }
+                });
+                document.getElementById('installerEditStocksContainer').classList.remove('hidden');
+                editDiv.innerHTML = html || '<i>Нет активных материалов</i>';
+                openModal('installerModal'); 
+            } 
+        }
+
+        function openModal(id) { 
+            if(id==='installerModal' && !document.getElementById('instId').value) { document.getElementById('installerEditStocksContainer').classList.add('hidden'); }
+            if(id==='movementModal') { document.getElementById('movId').value=''; document.getElementById('movQty').value=''; document.getElementById('movDate').value=getNowISO(); toggleMovementFields(); }
+            document.getElementById(id).classList.add('active'); 
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.querySelectorAll('.modal input[type="hidden"]').forEach(i=>i.value=''); }
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => { 
+            document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active')); 
+            b.classList.add('active'); const tid = b.dataset.target; if (tid) document.getElementById(tid).classList.add('active'); 
+            renderAll(); 
+        }));
+
+        function renderAll() { 
+            renderMaterials(); 
+            renderInstallers(); 
+            renderMovements(); 
+            if (document.getElementById('reports').classList.contains('active')) renderReports();
+        }
+        
+        function toggleTheme() { const b=document.body; if (b.getAttribute('data-theme')==='dark') { b.removeAttribute('data-theme'); localStorage.setItem('smt_theme','light'); } else { b.setAttribute('data-theme','dark'); localStorage.setItem('smt_theme','dark'); } }
+        if(localStorage.getItem('smt_theme')==='dark') document.body.setAttribute('data-theme','dark');
+        function toggleMobileView() { document.body.classList.toggle('mobile-view-forced'); }
+
+        document.getElementById('reportMonth').value = getNowISO().substring(0,7); 
+    </script>
+</body>
+</html>

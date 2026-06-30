@@ -129,7 +129,6 @@
             .btn-small { padding: 4px; font-size: 0.75rem; }
             
             table { font-size: 0.75rem; }
-            /* Убираем запрет на перенос строк в шапке, сильно сужаем отступы */
             th { white-space: normal !important; word-wrap: break-word; line-height: 1.1; font-size: 0.7rem; }
             th, td { padding: 4px 2px; }
             
@@ -154,7 +153,7 @@
 
     <header>
         <div class="logo">
-            СМТ Склад <span class="version-badge">v2.8</span>
+            СМТ Склад <span class="version-badge">v2.9</span>
             <div class="status-indicator"><div class="dot" id="connDot"></div><span id="connText">...</span></div>
         </div>
         <nav>
@@ -310,6 +309,7 @@
         </div>
     </div>
 
+    <!-- Обновленное модальное окно добавления материала с жесткой привязкой -->
     <div class="modal-overlay" id="materialModal">
         <div class="modal">
             <div class="modal-header"><span id="materialModalTitle">Материал</span><button class="modal-close" onclick="closeModal('materialModal')">&times;</button></div>
@@ -1084,7 +1084,7 @@
                             linkedMaterials.forEach(kmcMat => {
                                 let kmcStock = safeNum(stocks[kmcMat.id]);
                                 if (kmcStock < qty) { installWarns.push(`- Привязанный: ${kmcMat.name} (на руках: ${kmcStock}, нужно: ${qty})`); }
-                                newMovements.push({ id: generateId(), date, materialId: kmcMat.id, type: 'Установка', qty: qty, installerId, comment: 'Автосписание КМЧ (по привязке)' });
+                                newMovements.push({ id: generateId(), date, materialId: kmcMat.id, type: 'Установка', qty: qty, installerId, comment: 'Автосписание (по привязке)' });
                             });
                         }
                     }
@@ -1127,12 +1127,10 @@
                 const stocks = calculateStocks().installers[id] || {}; let html = '';
                 getSortedMaterials().forEach(m => {
                     let q = stocks[m.id] || 0;
-                    if (q > 0 || m.meta.catId === 1 || m.meta.catId === 2) { 
-                        html += `<div class="edit-stock-item"><label>${m.name}</label><input type="number" id="edit_qty_${m.id}" value="${q}" min="0" step="1"></div>`; 
-                    }
+                    html += `<div class="edit-stock-item"><label>${m.name}</label><input type="number" id="edit_qty_${m.id}" value="${q}" min="0" step="1"></div>`; 
                 });
                 document.getElementById('installerEditStocksContainer').classList.remove('hidden');
-                editDiv.innerHTML = html || '<i>Нет активных материалов</i>';
+                editDiv.innerHTML = html || '<i>Нет материалов в базе</i>';
                 openModal('installerModal'); 
             } 
         }

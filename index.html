@@ -153,7 +153,7 @@
 
     <header>
         <div class="logo">
-            СМТ Склад <span class="version-badge">v2.10</span>
+            СМТ Склад <span class="version-badge">v2.11</span>
             <div class="status-indicator"><div class="dot" id="connDot"></div><span id="connText">...</span></div>
         </div>
         <nav>
@@ -319,7 +319,8 @@
                 <div class="form-group">
                     <label>Привязка к счетчикам (отметьте все подходящие для автосписания)</label>
                     <div id="matLinkedMetersList" style="border: 1px solid var(--border-color); border-radius:3px; padding: 4px; max-height: 150px; overflow-y:auto; background: var(--bg-color);">
-                        </div>
+                        <!-- Чекбоксы генерируются в updateSelects() -->
+                    </div>
                 </div>
             </div>
             <div class="modal-footer"><button class="btn" onclick="closeModal('materialModal')">Отмена</button><button class="btn btn-primary" onclick="saveMaterial()">Сохранить</button></div>
@@ -414,7 +415,7 @@
         }
 
         // ==========================================
-        // БЕЗОПАСНАЯ МАТЕМАТИКА И АНАЛИЗ
+        // БЕЗОПАСНАЯ МАТЕМАТИКА И АНАЛИЗ С ЭМОДЗИ
         // ==========================================
         function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
         function getNowISO() { const n = new Date(); n.setMinutes(n.getMinutes() - n.getTimezoneOffset()); return n.toISOString().slice(0,16); }
@@ -426,8 +427,6 @@
             return dateStr;
         }
 
-        function formatDate(ds) { if(!ds) return ""; return new Date(ds).toLocaleString('ru-RU', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'}); }
-        
         function safeNum(val) { 
             if (typeof val === 'string') val = val.replace(',', '.');
             let n = parseFloat(val); 
@@ -440,21 +439,27 @@
         }
 
         function analyzeMaterial(name) {
-            let catId = 3, catName = 'Другое', size = 999, low = (name || "").toLowerCase();
-            if (low.includes('смт') || low.includes('счетчик')) { catId = 1; catName = 'Счетчики газа'; }
-            else if (low.includes('кмч')) { catId = 2; catName = 'КМЧ'; }
+            let catId = 3, catName = 'Другое', size = 999, low = (name || "").toLowerCase(), emoji = '📦';
+            if (low.includes('смт') || low.includes('счетчик')) { catId = 1; catName = 'Счетчики газа'; emoji = '📟'; }
+            else if (low.includes('кмч')) { catId = 2; catName = 'КМЧ'; emoji = '⚙️'; }
             
             const gMatch = low.match(/g(\d+)/);
             if (gMatch) { size = sizeMapping[gMatch[1]] || parseInt(gMatch[1]); } 
             else { const duMatch = low.match(/(?:к-|а-|ф-|кмч-|кмч-ф-)\s*(\d+(\.\d+)?)/); if (duMatch) size = parseFloat(duMatch[1]); }
-            return { catId, catName, size };
+            return { catId, catName, size, emoji };
         }
 
         function getSortedMaterials() {
             return [...db.materials].map(m => ({ ...m, meta: analyzeMaterial(m.name) })).sort((a, b) => a.meta.catId - b.meta.catId || a.meta.size - b.meta.size || a.name.localeCompare(b.name));
         }
 
-        function getMaterialName(id) { const m = db.materials.find(x => x.id === id); return m ? m.name : "Удалено"; }
+        // Новая функция для красивого вывода названия с эмодзи
+        function getMaterialDisplayName(id) { 
+            const m = db.materials.find(x => x.id === id); 
+            if (!m) return "Удалено";
+            return `${analyzeMaterial(m.name).emoji} ${m.name}`;
+        }
+
         function getInstallerName(id) { if (!id) return "-"; const i = db.installers.find(x => x.id === id); return i ? i.name : "Удалено"; }
 
         function calculateStocks() {
@@ -501,11 +506,9 @@
             let displayList = getSortedMaterials();
             if (search) displayList = displayList.filter(m => m.name.toLowerCase().includes(search));
 
-            // СТРОГИЙ ФИЛЬТР: Подсчет установленных позиций (ТОЛЬКО СЧЕТЧИКИ)
             let installedTotals = {};
             db.reports.forEach(r => {
                 let m = db.materials.find(x => x.id === r.materialId);
-                // Защита от мусорных данных: берем в расчет только материалы с catId === 1
                 if (m && analyzeMaterial(m.name).catId === 1) {
                     installedTotals[r.materialId] = safeNum((installedTotals[r.materialId] || 0) + safeNum(r.qty));
                 }
@@ -515,7 +518,6 @@
             let html = '', currentCat = '';
             
             displayList.forEach(m => {
-                // Инициализируем сумму категории
                 if(!catTotals[m.meta.catName]) catTotals[m.meta.catName] = { all: 0, installed: 0 };
 
                 if (m.meta.catName !== currentCat && !search) { 
@@ -530,14 +532,11 @@
                 }
                 
                 let totalAll = safeNum(currentStock + totalInstStock);
-                
-                // Добавляем к сумме категории
                 catTotals[m.meta.catName].all = safeNum(catTotals[m.meta.catName].all + totalAll);
 
                 let instHTML = '<span style="color:var(--text-muted)">0</span>';
                 if (totalInstStock > 0) instHTML = `<span class="clickable-total" title="${hoverLines.join('\n')}" onclick="showInstallerDetails('${m.id}')">${fmtQty(totalInstStock)} шт</span>`;
                 
-                // Рендер столбца Установлено: показываем цифру только для счетчиков, для КМЧ - пустота
                 let totalInstalledHTML = '';
                 if (m.meta.catId === 1) {
                     let totalInstalled = installedTotals[m.id] || 0;
@@ -545,12 +544,11 @@
                     catTotals[m.meta.catName].installed = safeNum(catTotals[m.meta.catName].installed + totalInstalled);
                 }
 
-                // Визуализация привязки (с учетом массива счетчиков)
                 let linkHtml = '';
                 let links = [];
                 if (m.linkedMeterIds && m.linkedMeterIds.length > 0) {
                     links = m.linkedMeterIds.map(id => { let meter = db.materials.find(x => x.id === id); return meter ? meter.name : ''; }).filter(Boolean);
-                } else if (m.linkedMeterId) { // Для старых записей
+                } else if (m.linkedMeterId) { 
                     let meter = db.materials.find(x => x.id === m.linkedMeterId);
                     if (meter) links.push(meter.name);
                 }
@@ -559,7 +557,7 @@
                 }
 
                 html += `<tr>
-                    <td>${m.name}${linkHtml}</td>
+                    <td>${m.meta.emoji} ${m.name}${linkHtml}</td>
                     <td class="text-right ${currentStock < 0 ? 'negative-stock' : ''}"><b>${fmtQty(currentStock)}</b></td>
                     <td class="text-right">${instHTML}</td>
                     <td class="text-right" style="color:var(--info-color); font-weight:bold;">${fmtQty(totalAll)}</td>
@@ -573,12 +571,10 @@
                 </tr>`;
             });
 
-            // Вывод раздельных итогов внизу (только в столбцах "Всего" и "Установлено")
             if (displayList.length > 0) {
                 let sortedCats = Object.keys(catTotals).sort();
                 sortedCats.forEach(cat => {
                     if (catTotals[cat].all > 0 || catTotals[cat].installed > 0) {
-                        // Для КМЧ ячейка "Установлено" в итогах будет пустой
                         let installedTotalHTML = catTotals[cat].installed > 0 ? `<td class="text-right" style="color:#00e676;">${fmtQty(catTotals[cat].installed)}</td>` : `<td></td>`;
                         
                         html += `<tr style="background:var(--header-bg); color:white; font-weight:bold; border-bottom: 1px solid rgba(255,255,255,0.2);">
@@ -599,7 +595,7 @@
             let html = '<ul class="installer-stock-list">', count = 0;
             for(let instId in stocks) { let q = stocks[instId][matId] || 0; if (q > 0) { html += `<li><b>${getInstallerName(instId)}</b>: ${fmtQty(q)} шт.</li>`; count++; } }
             html += '</ul>'; if (count === 0) html = '<i>Нет данных</i>';
-            document.getElementById('installerDetailsTitle').innerText = getMaterialName(matId);
+            document.getElementById('installerDetailsTitle').innerText = getMaterialDisplayName(matId);
             document.getElementById('installerDetailsBody').innerHTML = html;
             openModal('installerDetailsModal');
         }
@@ -625,7 +621,7 @@
                                 list.push(`<li style="background:rgba(0,0,0,0.05); padding:2px 4px; font-weight:bold; font-size:0.75rem; color:var(--text-muted); border-bottom:1px solid var(--border-color); text-align:center; margin-top:6px;">${m.meta.catName}</li>`);
                                 curCat = m.meta.catName;
                             }
-                            list.push(`<li style="display:flex; justify-content:space-between; padding:2px 4px;"><span>${m.name}</span> <b>${fmtQty(q)} шт</b></li>`);
+                            list.push(`<li style="display:flex; justify-content:space-between; padding:2px 4px;"><span>${m.meta.emoji} ${m.name}</span> <b>${fmtQty(q)} шт</b></li>`);
                             totalItemsCount += safeNum(q);
                         }
                     });
@@ -732,7 +728,7 @@
                                     let time = new Date(m.date).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
                                     return `<tr>
                                         <td>${time}</td>
-                                        <td><b style="font-size:0.75rem;">${getMaterialName(m.materialId)}</b></td>
+                                        <td><b style="font-size:0.75rem;">${getMaterialDisplayName(m.materialId)}</b></td>
                                         <td><span class="movement-badge" style="${badgeStyle}">${m.type}</span></td>
                                         <td class="text-right"><b style="font-size:0.9rem;">${fmtQty(m.qty)}</b></td>
                                         <td class="hide-mobile">${m.comment||'-'}</td>
@@ -758,13 +754,12 @@
         function renderReports() {
             const tbody = document.getElementById('reportsTableBody');
             let monthVal = document.getElementById('reportMonth').value; 
-            if (!monthVal) return;
 
             let stats = {};
             db.installers.forEach(i => stats[i.id] = { name: i.name, count: 0 });
 
             db.reports.forEach(r => {
-                if (r.date.startsWith(monthVal)) {
+                if (!monthVal || r.date.startsWith(monthVal)) {
                     let mat = db.materials.find(x => x.id === r.materialId);
                     if (mat && analyzeMaterial(mat.name).catId === 1) { 
                         if (stats[r.installerId]) {
@@ -789,14 +784,14 @@
                     </tr>`;
                 }
             }
-            if (html === '') html = '<tr><td colspan="3" style="text-align:center;">В этом месяце нет установок</td></tr>';
+            if (html === '') html = '<tr><td colspan="3" style="text-align:center;">За выбранный период нет установок</td></tr>';
             tbody.innerHTML = html;
         }
 
         function showReportDetails(name, installerId, monthVal) {
             currentReportView = { name, installerId, monthVal };
 
-            let reports = db.reports.filter(r => r.installerId === installerId && r.date.startsWith(monthVal));
+            let reports = db.reports.filter(r => r.installerId === installerId && (!monthVal || r.date.startsWith(monthVal)));
             reports = reports.filter(r => {
                 let m = db.materials.find(x => x.id === r.materialId);
                 return m && analyzeMaterial(m.name).catId === 1;
@@ -815,7 +810,7 @@
                 html += `<li style="background:var(--table-hover); padding:6px; margin-top:8px; font-weight:bold; border-radius:3px; color:var(--primary-color);">📅 ${ddmmyyyy(d)}</li>`;
                 
                 byDay[d].forEach(r => {
-                    let matName = getMaterialName(r.materialId);
+                    let matName = getMaterialDisplayName(r.materialId);
                     html += `<li style="display:flex; justify-content:space-between; align-items:center; padding:4px 10px; border-bottom:1px solid var(--border-color);">
                         <span>${matName}</span> 
                         <span style="display:flex; gap:10px; align-items:center;">
@@ -841,9 +836,10 @@
         }
 
         function deleteAllInstallerReports(installerId, installerName, monthVal) {
-            let ans = prompt(`ВНИМАНИЕ!\nУдалить ВСЕ установки для монтажника "${installerName}" за месяц (${monthVal}) из отчетов?\nОстатки на складе при этом НЕ изменятся.\n\nДля подтверждения введите слово "удалить":`);
+            let periodText = monthVal ? `за месяц (${monthVal})` : `ЗА ВСЕ ВРЕМЯ`;
+            let ans = prompt(`ВНИМАНИЕ!\nУдалить ВСЕ установки для монтажника "${installerName}" ${periodText} из отчетов?\nОстатки на складе при этом НЕ изменятся.\n\nДля подтверждения введите слово "удалить":`);
             if(ans && ans.trim().toLowerCase() === 'удалить') {
-                db.reports = db.reports.filter(r => !(r.installerId === installerId && r.date.startsWith(monthVal)));
+                db.reports = db.reports.filter(r => !(r.installerId === installerId && (!monthVal || r.date.startsWith(monthVal))));
                 pushToCloud();
             } else if (ans !== null) {
                 alert("Удаление отменено.");
@@ -854,7 +850,7 @@
             let optHtml = '', curCat = '';
             getSortedMaterials().forEach(m => {
                 if(m.meta.catName !== curCat) { if(curCat) optHtml += '</optgroup>'; optHtml += `<optgroup label="${m.meta.catName}">`; curCat = m.meta.catName; }
-                optHtml += `<option value="${m.id}">${m.name}</option>`;
+                optHtml += `<option value="${m.id}">${m.meta.emoji} ${m.name}</option>`;
             }); if(curCat) optHtml += '</optgroup>';
             
             document.getElementById('movMaterial').innerHTML = optHtml; document.getElementById('filterMovMaterial').innerHTML = '<option value="">Все материалы</option>' + optHtml;
@@ -862,14 +858,13 @@
             let insts = db.installers.sort((a,b) => a.name.localeCompare(b.name)).map(i => `<option value="${i.id}">${i.name}</option>`).join('');
             document.getElementById('movInstaller').innerHTML = insts; document.getElementById('filterMovInstaller').innerHTML = '<option value="">Все монтажники</option>' + insts; document.getElementById('massInstaller').innerHTML = insts; document.getElementById('instOpInstaller').innerHTML = '<option value="">Выберите...</option>' + insts;
 
-            // Заполняем список счетчиков чекбоксами для окна привязки материалов
             let meterChkHtml = '';
             getSortedMaterials().forEach(m => {
-                if (m.meta.catId === 1) { // Берем только счетчики газа
+                if (m.meta.catId === 1) { 
                     meterChkHtml += `
                     <div style="display:flex; align-items:center; padding: 4px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.02); margin-bottom: 2px; border-radius: 3px;">
                         <input type="checkbox" id="link_meter_${m.id}" value="${m.id}" style="width: auto; min-height: auto; margin:0;">
-                        <label for="link_meter_${m.id}" style="margin-left: 8px; cursor:pointer; font-size:0.85rem; flex-grow:1; user-select:none; margin-bottom:0;">${m.name}</label>
+                        <label for="link_meter_${m.id}" style="margin-left: 8px; cursor:pointer; font-size:0.85rem; flex-grow:1; user-select:none; margin-bottom:0;">${m.meta.emoji} ${m.name}</label>
                     </div>`;
                 }
             });
@@ -918,7 +913,6 @@
                   name = document.getElementById('matName').value.trim(), 
                   initialStock = safeNum(document.getElementById('matInitialStock').value);
                   
-            // Собираем все отмеченные счетчики
             let linkedMeterIds = [];
             document.querySelectorAll('#matLinkedMetersList input[type="checkbox"]:checked').forEach(chk => {
                 linkedMeterIds.push(chk.value);
@@ -931,7 +925,7 @@
                     m.name = name; 
                     m.initialStock = initialStock;
                     m.linkedMeterIds = linkedMeterIds;
-                    delete m.linkedMeterId; // Очищаем старый формат, если он был, чтобы не мешался
+                    delete m.linkedMeterId; 
                 } 
             } else { 
                 db.materials.push({id: generateId(), name, initialStock, linkedMeterIds}); 
@@ -1007,7 +1001,7 @@
             const listDiv = document.getElementById('massIssueMaterialsList'); let html = '', curCat = '';
             getSortedMaterials().forEach(m => {
                 if(m.meta.catName !== curCat) { html += `<div class="group-header" style="padding:4px; margin-top:8px;">${m.meta.catName}</div>`; curCat = m.meta.catName; }
-                html += `<div class="mass-issue-item" id="mass_wrap_${m.id}"><input type="checkbox" id="chk_${m.id}" onchange="toggleMassItem('${m.id}')"><label for="chk_${m.id}">${m.name}</label><input type="number" id="qty_${m.id}" min="0" step="1" disabled placeholder="0"></div>`;
+                html += `<div class="mass-issue-item" id="mass_wrap_${m.id}"><input type="checkbox" id="chk_${m.id}" onchange="toggleMassItem('${m.id}')"><label for="chk_${m.id}">${m.meta.emoji} ${m.name}</label><input type="number" id="qty_${m.id}" min="0" step="1" disabled placeholder="0"></div>`;
             }); listDiv.innerHTML = html; openModal('massIssueModal');
         }
 
@@ -1064,7 +1058,7 @@
                     html += `
                     <div class="mass-issue-item" id="inst_wrap_${mat.id}">
                         <input type="checkbox" id="inst_chk_${mat.id}" onchange="toggleInstItem('${mat.id}')">
-                        <label for="inst_chk_${mat.id}">${mat.name} (на руках: ${fmtQty(q)})</label>
+                        <label for="inst_chk_${mat.id}">${mat.meta.emoji} ${mat.name} (на руках: ${fmtQty(q)})</label>
                         <input type="number" id="inst_qty_${mat.id}" min="1" max="${q}" step="1" disabled placeholder="0" title="Укажите количество для установки">
                     </div>`;
                 }
@@ -1094,7 +1088,6 @@
                         newReports.push({ id: generateId(), date, materialId: m.id, qty, installerId });
                         added++;
 
-                        // ИЩЕМ КМЧ ДЛЯ АВТОСПИСАНИЯ (ПОЛНАЯ ПОДДЕРЖКА НЕСКОЛЬКИХ СЧЕТЧИКОВ)
                         let linkedMaterials = db.materials.filter(mat => {
                             return (mat.linkedMeterIds && mat.linkedMeterIds.includes(m.id)) || (mat.linkedMeterId === m.id);
                         });
@@ -1133,12 +1126,11 @@
                 document.getElementById('matName').value = m.name; 
                 document.getElementById('matInitialStock').value = m.initialStock; 
                 
-                // Восстанавливаем галочки привязок
                 document.querySelectorAll('#matLinkedMetersList input[type="checkbox"]').forEach(chk => {
                     chk.checked = false;
                     if (m.linkedMeterIds && m.linkedMeterIds.includes(chk.value)) {
                         chk.checked = true;
-                    } else if (m.linkedMeterId && m.linkedMeterId === chk.value) { // Для старых записей
+                    } else if (m.linkedMeterId && m.linkedMeterId === chk.value) { 
                         chk.checked = true;
                     }
                 });
@@ -1156,7 +1148,7 @@
                 const stocks = calculateStocks().installers[id] || {}; let html = '';
                 getSortedMaterials().forEach(m => {
                     let q = stocks[m.id] || 0;
-                    html += `<div class="edit-stock-item"><label>${m.name}</label><input type="number" id="edit_qty_${m.id}" value="${q}" min="0" step="1"></div>`; 
+                    html += `<div class="edit-stock-item"><label>${m.meta.emoji} ${m.name}</label><input type="number" id="edit_qty_${m.id}" value="${q}" min="0" step="1"></div>`; 
                 });
                 document.getElementById('installerEditStocksContainer').classList.remove('hidden');
                 editDiv.innerHTML = html || '<i>Нет материалов в базе</i>';
@@ -1201,7 +1193,8 @@
         function toggleTheme() { const b=document.body; if (b.getAttribute('data-theme')==='dark') { b.removeAttribute('data-theme'); localStorage.setItem('smt_theme','light'); } else { b.setAttribute('data-theme','dark'); localStorage.setItem('smt_theme','dark'); } }
         if(localStorage.getItem('smt_theme')==='dark') document.body.setAttribute('data-theme','dark');
 
-        document.getElementById('reportMonth').value = getNowISO().substring(0,7); 
+        // Убрали автозаполнение текущего месяца, чтобы по умолчанию загружались все данные
+        // document.getElementById('reportMonth').value = getNowISO().substring(0,7); 
     </script>
 </body>
 </html>

@@ -175,11 +175,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Материал</th>
-                            <th class="text-right">Склад</th>
-                            <th class="text-right">На руках</th>
-                            <th class="text-right">Всего</th>
-                            <th class="text-right">Установлено</th>
+                            <th style="width: 100%;">Материал</th>
+                            <th class="text-right" style="width: 1%; white-space: nowrap;">Склад</th>
+                            <th class="text-right" style="width: 1%; white-space: nowrap;">На руках</th>
+                            <th class="text-right" style="width: 1%; white-space: nowrap;">Всего</th>
+                            <th class="text-right" style="width: 1%; white-space: nowrap;">Установлено</th>
                             <th class="text-right" style="width: 55px;">Действ.</th>
                         </tr>
                     </thead>
@@ -193,7 +193,11 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr><th>Монтажник</th><th>№ телефона</th><th>На руках</th><th class="text-right" style="width: 55px;">Действ.</th></tr>
+                        <tr>
+                            <th style="width: 35%;">Монтажник</th>
+                            <th>На руках</th>
+                            <th class="text-right" style="width: 65px;">Действ.</th>
+                        </tr>
                     </thead>
                     <tbody id="installersListBody"></tbody>
                 </table>
@@ -512,7 +516,7 @@
             let html = '', currentCat = '';
             
             displayList.forEach(m => {
-                if(!catTotals[m.meta.catName]) catTotals[m.meta.catName] = { all: 0, installed: 0 };
+                if(!catTotals[m.meta.catName]) catTotals[m.meta.catName] = { warehouse: 0, onHand: 0, all: 0, installed: 0 };
 
                 if (m.meta.catName !== currentCat && !search) { 
                     html += `<tr class="group-header"><td colspan="6">📁 ${m.meta.catName}</td></tr>`; 
@@ -526,6 +530,9 @@
                 }
                 
                 let totalAll = safeNum(currentStock + totalInstStock);
+                
+                catTotals[m.meta.catName].warehouse = safeNum(catTotals[m.meta.catName].warehouse + currentStock);
+                catTotals[m.meta.catName].onHand = safeNum(catTotals[m.meta.catName].onHand + totalInstStock);
                 catTotals[m.meta.catName].all = safeNum(catTotals[m.meta.catName].all + totalAll);
 
                 let instHTML = '<span style="color:var(--text-muted)">0</span>';
@@ -557,12 +564,12 @@
                 let sortedCats = Object.keys(catTotals).sort();
                 sortedCats.forEach(cat => {
                     if (catTotals[cat].all > 0 || catTotals[cat].installed > 0) {
-                        let installedTotalHTML = catTotals[cat].installed > 0 ? `<td class="text-right" style="color:#00e676;">${fmtQty(catTotals[cat].installed)}</td>` : `<td></td>`;
-                        
                         html += `<tr style="background:var(--header-bg); color:white; font-weight:bold; border-bottom: 1px solid rgba(255,255,255,0.2);">
-                            <td colspan="3" style="text-align:right;">ИТОГО ${cat}:</td>
+                            <td style="text-align:right;">ИТОГО ${cat}:</td>
+                            <td class="text-right">${fmtQty(catTotals[cat].warehouse)}</td>
+                            <td class="text-right">${fmtQty(catTotals[cat].onHand)}</td>
                             <td class="text-right">${fmtQty(catTotals[cat].all)}</td>
-                            ${installedTotalHTML}
+                            <td class="text-right" ${catTotals[cat].installed > 0 ? 'style="color:#00e676;"' : ''}>${fmtQty(catTotals[cat].installed)}</td>
                             <td></td>
                         </tr>`;
                     }
@@ -623,7 +630,6 @@
                 }
                 return `<tr>
                     <td style="vertical-align:top;"><b>${inst.name}</b></td>
-                    <td style="vertical-align:top; font-size:0.8rem;">${inst.phone||'-'}</td>
                     <td style="vertical-align:top; padding:4px 2px;">${itemsHtml}</td>
                     <td class="text-right" style="vertical-align:top;">
                         <div style="display:flex; justify-content:flex-end; gap:2px;">

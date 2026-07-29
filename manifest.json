@@ -1,0 +1,16 @@
+{
+  "name": "ТО ПУРГ",
+  "short_name": "ПУРГ",
+  "description": "ТО ПУРГ",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#2b7a4b",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

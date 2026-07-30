@@ -770,7 +770,7 @@
                           mediaEl.className = 'thumbnail';
                           mediaEl.muted = true;
                           mediaEl.onclick = (e) => { e.stopPropagation(); openLightbox(previewSrc, 'video'); };
-                      } else {
+                          } else {
                           mediaEl = document.createElement('img');
                           mediaEl.src = previewSrc;
                           mediaEl.className = 'thumbnail';
@@ -957,31 +957,21 @@
   
   // Генерация красивого текстового отчета
   function buildEmailBodyText() {
-    let text = `=======================================\n`;
-    text += `ОТЧЕТ ТО ПУРГ\n`;
-    text += `=======================================\n\n`;
-    
-    text += `📄 ИНФОРМАЦИЯ ОБ ОБЪЕКТЕ:\n`;
-    text += `• Наименование: ${state.purgName}\n`;
+    let text = `• Объект: ${state.purgName}\n`;
     text += `• Адрес: ${state.address}\n`;
-    text += `• Исполнитель: ${state.installerName}\n`;
-    text += `• Дата: ${formatDateTime(state.creationDate)}\n`;
-    text += `• GPS Координаты: ${(state.coordinates && !state.coordinates.error) ? state.coordinates.lat.toFixed(6) + ', ' + state.coordinates.lng.toFixed(6) : 'Не зафиксированы'}\n`;
-    
-    text += `\n=======================================\n`;
-    text += `🛠️ ХОД ВЫПОЛНЕНИЯ РАБОТ:\n`;
-    text += `=======================================\n\n`;
+    text += `• GPS: ${(state.coordinates && !state.coordinates.error) ? state.coordinates.lat.toFixed(6) + ', ' + state.coordinates.lng.toFixed(6) : 'Не зафиксированы'}\n`;
+    text += `--------------------\n`;
     
     mandatoryConfig.forEach((cfg, idx) => {
-        text += `[${cfg.title}]\n`;
+        text += `• Работа: ${cfg.title}\n`;
         if (cfg.isCheckbox) {
-            text += `   — Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
+            text += `• Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
         }
         if (cfg.options && state.selections[cfg.prefix]) {
-            text += `   — Статус: ${state.selections[cfg.prefix]}\n`;
+            text += `• Статус: ${state.selections[cfg.prefix]}\n`;
         }
         if (state.comments[cfg.prefix]) {
-            text += `   — Комментарий: ${state.comments[cfg.prefix]}\n`;
+            text += `• Комментарий: ${state.comments[cfg.prefix]}\n`;
         }
         
         let requiresPhoto = false;
@@ -993,17 +983,17 @@
                 cfg.customAddBtns.forEach((btn, subIdx) => {
                     const count = state.media[idx].filter(m => m.subIdx === subIdx || (m.subIdx === undefined && subIdx === 0)).length;
                     const cleanName = btn.text.replace('📸 ','').replace('🎥 ','');
-                    text += `   — ${cleanName}: прикреплено ${count} шт.\n`;
+                    text += `• ${cleanName}: ${count} шт.\n`;
                 });
             } else {
-                text += `   — Прикреплено файлов: ${state.media[idx].length} шт.\n`;
+                text += `• Прикреплено файлов: ${state.media[idx].length} шт.\n`;
             }
         }
-        text += '\n';
+        text += `--------------------\n`;
     });
     
-    text += `=======================================\n`;
-    text += `* Примечание: Видеозаписи отправляются отдельными файлами вместе с архивом.\n`;
+    text += `• Исполнитель: ${state.installerName}\n`;
+    text += `• ${formatDateTime(state.creationDate)}\n`;
     return text;
   }
 

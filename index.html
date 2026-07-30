@@ -207,7 +207,7 @@
     </div>
   </div>
 
-  <footer>PWA | ТО ПУРГ | v8.1</footer>
+  <footer>PWA | ТО ПУРГ | v8.3</footer>
 </div>
 
 <!-- МОДАЛКА ПРОСМОТРА МЕДИА -->
@@ -296,28 +296,23 @@
 
   // ---- АЛГОРИТМ ТЗ: Нумерация от 1 до 17 и русские названия файлов ----
   const mandatoryConfig = [
-    // СТРАНИЦА 1
-    { title: "1. Фото ключа ПУРГ", prefix: "01_key", filePrefix: "01_Ключ", needsPhoto: true, page: 1 },
-    { title: "2. Общее фото ПУРГ до всех работ (вместе с травой и т.д.)", prefix: "02_before", filePrefix: "02_Общее_фото_до", needsPhoto: true, page: 1 },
-    { title: "3. Проверка замков на дверях", prefix: "03_locks", filePrefix: "03_Замки", needsComment: true, page: 1 },
-    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", prefix: "04_grass", filePrefix: "04_Покос", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", page: 1 },
-
-    // СТРАНИЦА 2
-    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", prefix: "06_gas_1", filePrefix: "05_Утечки_до", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], condPhotoFor: ["Обнаружена утечка"], customAddBtns: [{ icon: "📸", text: "Фото утечки" }], page: 2 },
-    { title: "6. Проверка работоспособности освещения в ПУРГ.", prefix: "07_light", filePrefix: "06_Освещение", needsComment: true, page: 2 },
-    { title: "7. Общее фото ПУРГ изнутри (ветки, байпас, мусор).", prefix: "08_inside_before", filePrefix: "07_Внутри_до", needsPhoto: true, page: 2 },
-    { title: "8. Уборка мусора внутри ПУРГ. Фото после уборки.", prefix: "09_cleanup", filePrefix: "08_Уборка", needsPhoto: true, options: ["Уборка выполнена", "Уборка не требуется"], page: 2 },
-    { title: "9. Проверка работоспособности кранов внутри и снаружи.", prefix: "11_valves", filePrefix: "09_Краны", needsComment: true, page: 2 },
-
-    // СТРАНИЦА 3
-    { title: "10. Замер давления. Проверка манометров (с фото).", prefix: "12_pressure", filePrefix: "10_Давление", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон" }, { icon: "📸", text: "Приборы" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
-    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", prefix: "14_filter", filePrefix: "11_Фильтр", needsPhoto: true, options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
-    { title: "12. Проверка переключения на нужную ветку (лето/зима).", prefix: "15_branches", filePrefix: "12_Ветки", options: ["Ветка зима", "Ветка лето", "Только одна ветка"], page: 3 },
-    { title: "13. Проверка работоспособности счетчиков и корректоров.", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", filePrefix: "13_Счетчики_Корректоры", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Общий вид" }, { icon: "🎥", text: "Видео", isVideo: true }, { icon: "📸", text: "Пломбы" }, { icon: "📸", text: "Масло" }, { icon: "📸", text: "Экраны" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
-    { title: "14. Скачивание архивов с корректоров.", prefix: "17_archives", filePrefix: "14_Архивы", options: ["Архивы скачаны", "Архив не скачан"], condCommentFor: ["Архив не скачан"], page: 3 },
-    { title: "15. Проверка наличия заземлений и их подключения (с фото).", prefix: "18_grounding", filePrefix: "15_Заземление", needsPhoto: true, options: ["Есть заземление", "Нет заземления"], condCommentFor: ["Нет заземления"], page: 3 },
-    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", prefix: "19_gas_2", filePrefix: "16_Утечки_после", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
-    { title: "17. Дополнительные примечания.", prefix: "21_notes", filePrefix: "17_Примечания", needsComment: true, isOptional: true, page: 3 }
+    { title: "1. Фото ключа ПУРГ", shortTitle: "Фото ключа", prefix: "01_key", filePrefix: "01_Ключ", needsPhoto: true, page: 1 },
+    { title: "2. Общее фото ПУРГ до всех работ (вместе с травой и т.д.)", shortTitle: "Общее фото до работ", prefix: "02_before", filePrefix: "02_Общее_фото_до", needsPhoto: true, page: 1 },
+    { title: "3. Проверка замков на дверях", shortTitle: "Проверка замков", prefix: "03_locks", filePrefix: "03_Замки", needsComment: true, page: 1 },
+    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", shortTitle: "Покос травы", prefix: "04_grass", filePrefix: "04_Покос", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", page: 1 },
+    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", shortTitle: "Замер утечек (до работ)", prefix: "06_gas_1", filePrefix: "05_Утечки_до", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], condPhotoFor: ["Обнаружена утечка"], customAddBtns: [{ icon: "📸", text: "Фото утечки" }], page: 2 },
+    { title: "6. Проверка работоспособности освещения в ПУРГ.", shortTitle: "Проверка освещения", prefix: "07_light", filePrefix: "06_Освещение", needsComment: true, page: 2 },
+    { title: "7. Общее фото ПУРГ изнутри (ветки, байпас, мусор).", shortTitle: "Общее фото внутри", prefix: "08_inside_before", filePrefix: "07_Внутри_до", needsPhoto: true, page: 2 },
+    { title: "8. Уборка мусора внутри ПУРГ. Фото после уборки.", shortTitle: "Уборка мусора", prefix: "09_cleanup", filePrefix: "08_Уборка", needsPhoto: true, options: ["Уборка выполнена", "Уборка не требуется"], page: 2 },
+    { title: "9. Проверка работоспособности кранов внутри и снаружи.", shortTitle: "Проверка кранов", prefix: "11_valves", filePrefix: "09_Краны", needsComment: true, page: 2 },
+    { title: "10. Замер давления. Проверка манометров (с фото).", shortTitle: "Замер давления", prefix: "12_pressure", filePrefix: "10_Давление", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон" }, { icon: "📸", text: "Приборы" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
+    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", shortTitle: "Состояние фильтра", prefix: "14_filter", filePrefix: "11_Фильтр", needsPhoto: true, options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
+    { title: "12. Проверка переключения на нужную ветку (лето/зима).", shortTitle: "Переключение веток", prefix: "15_branches", filePrefix: "12_Ветки", options: ["Ветка зима", "Ветка лето", "Только одна ветка"], page: 3 },
+    { title: "13. Проверка работоспособности счетчиков и корректоров.", shortTitle: "Проверка счетчиков и корректоров", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", filePrefix: "13_Счетчики_Корректоры", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Общий вид" }, { icon: "🎥", text: "Видео", isVideo: true }, { icon: "📸", text: "Пломбы" }, { icon: "📸", text: "Масло", optionalCheckbox: "Без масла" }, { icon: "📸", text: "Экраны" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
+    { title: "14. Скачивание архивов с корректоров.", shortTitle: "Скачивание архивов", prefix: "17_archives", filePrefix: "14_Архивы", options: ["Архивы скачаны", "Архив не скачан"], condCommentFor: ["Архив не скачан"], page: 3 },
+    { title: "15. Проверка наличия заземлений и их подключения (с фото).", shortTitle: "Проверка заземления", prefix: "18_grounding", filePrefix: "15_Заземление", needsPhoto: true, options: ["Есть заземление", "Нет заземления"], condCommentFor: ["Нет заземления"], page: 3 },
+    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", shortTitle: "Повторный замер утечек", prefix: "19_gas_2", filePrefix: "16_Утечки_после", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
+    { title: "17. Дополнительные примечания.", shortTitle: "Примечания", prefix: "21_notes", filePrefix: "17_Примечания", needsComment: true, isOptional: true, page: 3 }
   ];
 
   // ---- СТЕЙТ ПРИЛОЖЕНИЯ ----
@@ -330,6 +325,30 @@
   };
   let currentZipName = "";
   let watchId = null; let gpsTimeoutId = null;
+
+  // Парсер ошибок для текстового отчета
+  function isCommentError(text) {
+      if (!text) return false;
+      let t = text.toLowerCase();
+      
+      // Исключаем фразы, которые звучат как отрицание проблем
+      let cleanT = t.replace(/(нет|отсутствует|не обнаружена)\s*(утечек|утечки|утечка|проблем|повреждений|дефектов|ошибок)/g, '');
+      cleanT = cleanT.replace(/утечк(а|и|ек)\s*(нет|отсутствует|не обнаружена)/g, '');
+      cleanT = cleanT.replace(/(всё|все)\s*(исправно|работает|в норме|отлично|хорошо)/g, '');
+      cleanT = cleanT.replace(/без\s*(повреждений|замечаний|проблем)/g, '');
+      
+      const errorPatterns = [
+          'неисправ', 'сломан', 'поврежд', 'дефект', 'ошибк', 'не работ', 'не крут', 'с трудом', 
+          'заклинил', 'сорван', 'грязн', 'загрязн', 'порван', 'разбит', 'трещин', 'проблем', 'утечк', 
+          'нет замка', 'нет освещ', 'нет электр', 'отсутству', 'плох', 'запах', 'шумит', 'свистит', 'пропускает',
+          'не открыва', 'перелез', 'заржаве', 'ржав', 'заеда'
+      ];
+      
+      for (let pattern of errorPatterns) {
+          if (cleanT.includes(pattern)) return true;
+      }
+      return false;
+  }
 
   // DOM Элементы
   const formScreen = document.getElementById('formScreen');
@@ -606,6 +625,13 @@
                   const relevantMedia = mediaArray ? mediaArray.map((m, originalIndex) => ({...m, originalIndex})).filter(m => (m.subIdx === subIdx) || (m.subIdx === undefined && subIdx === 0)) : [];
                   const hasSubMedia = relevantMedia.length > 0;
 
+                  const sidePanel = document.createElement('div');
+                  sidePanel.style.display = 'flex';
+                  sidePanel.style.flexDirection = 'column';
+                  sidePanel.style.alignItems = 'center';
+                  sidePanel.style.gap = '6px';
+                  sidePanel.style.flexShrink = '0';
+
                   const placeholder = document.createElement('div');
                   placeholder.className = 'add-photo-placeholder';
                   if (hasSubMedia) placeholder.classList.add('valid');
@@ -617,7 +643,45 @@
                       if (btn.isVideo) globalVideoInput.click();
                       else globalFileInput.click(); 
                   };
-                  rowWrapper.appendChild(placeholder);
+                  sidePanel.appendChild(placeholder);
+                  
+                  let chkStateKey = `${cfg.prefix}_sub_${subIdx}_optOut`;
+                  if (btn.optionalCheckbox) {
+                      const optLbl = document.createElement('label');
+                      optLbl.style.fontSize = '0.65rem';
+                      optLbl.style.display = 'flex';
+                      optLbl.style.alignItems = 'center';
+                      optLbl.style.gap = '4px';
+                      optLbl.style.color = '#475569';
+                      optLbl.style.cursor = 'pointer';
+                      
+                      const optChk = document.createElement('input');
+                      optChk.type = 'checkbox';
+                      optChk.style.margin = '0';
+                      optChk.style.width = '12px';
+                      optChk.style.height = '12px';
+                      optChk.style.accentColor = '#2b7a4b';
+                      optChk.checked = !!state.checkboxes[chkStateKey];
+                      optChk.addEventListener('change', (e) => {
+                          state.checkboxes[chkStateKey] = e.target.checked;
+                          markAsEdited();
+                          renderChecklist(); 
+                      });
+                      
+                      optLbl.appendChild(optChk);
+                      const txtSpan = document.createElement('span');
+                      txtSpan.innerText = btn.optionalCheckbox;
+                      optLbl.appendChild(txtSpan);
+                      sidePanel.appendChild(optLbl);
+                      
+                      if (state.checkboxes[chkStateKey]) {
+                          placeholder.style.opacity = '0.5';
+                          placeholder.style.borderColor = '#cbd5e1';
+                          placeholder.style.color = '#94a3b8';
+                      }
+                  }
+                  
+                  rowWrapper.appendChild(sidePanel);
 
                   const photosRow = document.createElement('div');
                   photosRow.className = 'media-photos-row';
@@ -738,6 +802,13 @@
               const relevantMedia = mediaArray ? mediaArray.map((m, originalIndex) => ({...m, originalIndex})).filter(m => (m.subIdx === subIdx) || (m.subIdx === undefined && subIdx === 0)) : [];
               const hasSubMedia = relevantMedia.length > 0;
 
+              const sidePanel = document.createElement('div');
+              sidePanel.style.display = 'flex';
+              sidePanel.style.flexDirection = 'column';
+              sidePanel.style.alignItems = 'center';
+              sidePanel.style.gap = '6px';
+              sidePanel.style.flexShrink = '0';
+
               const placeholder = document.createElement('div');
               placeholder.className = 'add-photo-placeholder';
               
@@ -750,7 +821,45 @@
                   if (btn.isVideo) globalVideoInput.click();
                   else globalFileInput.click(); 
               };
-              rowWrapper.appendChild(placeholder);
+              sidePanel.appendChild(placeholder);
+              
+              let chkStateKey = `${cfg.prefix}_sub_${subIdx}_optOut`;
+              if (btn.optionalCheckbox) {
+                  const optLbl = document.createElement('label');
+                  optLbl.style.fontSize = '0.65rem';
+                  optLbl.style.display = 'flex';
+                  optLbl.style.alignItems = 'center';
+                  optLbl.style.gap = '4px';
+                  optLbl.style.color = '#475569';
+                  optLbl.style.cursor = 'pointer';
+                  
+                  const optChk = document.createElement('input');
+                  optChk.type = 'checkbox';
+                  optChk.style.margin = '0';
+                  optChk.style.width = '12px';
+                  optChk.style.height = '12px';
+                  optChk.style.accentColor = '#2b7a4b';
+                  optChk.checked = !!state.checkboxes[chkStateKey];
+                  optChk.addEventListener('change', (e) => {
+                      state.checkboxes[chkStateKey] = e.target.checked;
+                      markAsEdited();
+                      renderChecklist(); 
+                  });
+                  
+                  optLbl.appendChild(optChk);
+                  const txtSpan = document.createElement('span');
+                  txtSpan.innerText = btn.optionalCheckbox;
+                  optLbl.appendChild(txtSpan);
+                  sidePanel.appendChild(optLbl);
+                  
+                  if (state.checkboxes[chkStateKey]) {
+                      placeholder.style.opacity = '0.5';
+                      placeholder.style.borderColor = '#cbd5e1';
+                      placeholder.style.color = '#94a3b8';
+                  }
+              }
+              
+              rowWrapper.appendChild(sidePanel);
 
               const photosRow = document.createElement('div');
               photosRow.className = 'media-photos-row';
@@ -818,17 +927,23 @@
         if (cfg.condPhotoFor && cfg.condPhotoFor.includes(state.selections[cfg.prefix])) requiresPhoto = true;
 
         if (requiresPhoto) {
-            if (!state.media[idx] || state.media[idx].length === 0) {
-                currentValid = false;
-            } else {
-                if (cfg.customAddBtns) {
-                    for (let subIdx = 0; subIdx < cfg.customAddBtns.length; subIdx++) {
-                        const hasSubMedia = state.media[idx].some(m => m.subIdx === subIdx || (m.subIdx === undefined && subIdx === 0));
+            if (cfg.customAddBtns) {
+                for (let subIdx = 0; subIdx < cfg.customAddBtns.length; subIdx++) {
+                    const btn = cfg.customAddBtns[subIdx];
+                    let chkStateKey = `${cfg.prefix}_sub_${subIdx}_optOut`;
+                    const isOptedOut = btn.optionalCheckbox && state.checkboxes[chkStateKey];
+                    
+                    if (!isOptedOut) {
+                        const hasSubMedia = state.media[idx] && state.media[idx].some(m => m.subIdx === subIdx || (m.subIdx === undefined && subIdx === 0));
                         if (!hasSubMedia) {
                             currentValid = false;
                             break;
                         }
                     }
+                }
+            } else {
+                if (!state.media[idx] || state.media[idx].length === 0) {
+                    currentValid = false;
                 }
             }
         }
@@ -962,16 +1077,29 @@
     text += `• GPS: ${(state.coordinates && !state.coordinates.error) ? state.coordinates.lat.toFixed(6) + ', ' + state.coordinates.lng.toFixed(6) : 'Не зафиксированы'}\n`;
     text += `--------------------\n`;
     
+    let errorItems = [];
+    const knownErrorOptions = ["Обнаружена утечка", "Неисправно", "Загрязнен", "Неисправен", "Неисправность", "Архив не скачан", "Нет заземления", "Утечка есть"];
+    
+    let displayCounter = 1;
+
     mandatoryConfig.forEach((cfg, idx) => {
-        text += `• Работа: ${cfg.title}\n`;
+        let itemContent = "";
+        let hasError = false;
+        
         if (cfg.isCheckbox) {
-            text += `• Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
+            itemContent += `• Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
         }
         if (cfg.options && state.selections[cfg.prefix]) {
-            text += `• Статус: ${state.selections[cfg.prefix]}\n`;
+            itemContent += `• Статус: ${state.selections[cfg.prefix]}\n`;
+            if (knownErrorOptions.includes(state.selections[cfg.prefix])) {
+                hasError = true;
+            }
         }
-        if (state.comments[cfg.prefix]) {
-            text += `• Комментарий: ${state.comments[cfg.prefix]}\n`;
+        if (state.comments[cfg.prefix] && state.comments[cfg.prefix].trim() !== '') {
+            itemContent += `• Комментарий: ${state.comments[cfg.prefix]}\n`;
+            if (isCommentError(state.comments[cfg.prefix])) {
+                hasError = true;
+            }
         }
         
         let requiresPhoto = false;
@@ -981,16 +1109,37 @@
         if (requiresPhoto && state.media[idx]) {
             if (cfg.customAddBtns) {
                 cfg.customAddBtns.forEach((btn, subIdx) => {
-                    const count = state.media[idx].filter(m => m.subIdx === subIdx || (m.subIdx === undefined && subIdx === 0)).length;
+                    let chkStateKey = `${cfg.prefix}_sub_${subIdx}_optOut`;
+                    const isOptedOut = btn.optionalCheckbox && state.checkboxes[chkStateKey];
                     const cleanName = btn.text.replace('📸 ','').replace('🎥 ','');
-                    text += `• ${cleanName}: ${count} шт.\n`;
+                    
+                    if (isOptedOut) {
+                         itemContent += `• ${cleanName}: счетчик без масла\n`;
+                    }
                 });
-            } else {
-                text += `• Прикреплено файлов: ${state.media[idx].length} шт.\n`;
             }
         }
-        text += `--------------------\n`;
+        
+        // Если пункт содержит хоть какую-то информацию, добавляем его в отчет
+        if (itemContent !== "") {
+            let safeTitle = cfg.shortTitle || cfg.title.replace(/^\d+\.\s*/, '');
+            text += `• ${displayCounter}. ${safeTitle}\n`;
+            text += itemContent;
+            text += `--------------------\n`;
+            
+            if (hasError) {
+                errorItems.push(displayCounter);
+            }
+            
+            displayCounter++;
+        }
     });
+    
+    if (errorItems.length > 0) {
+        text += `• Ошибок: ${errorItems.length} шт.\n`;
+        text += `• В пунктах: ${errorItems.join(', ')}\n`;
+        text += `--------------------\n`;
+    }
     
     text += `• Исполнитель: ${state.installerName}\n`;
     text += `• ${formatDateTime(state.creationDate)}\n`;

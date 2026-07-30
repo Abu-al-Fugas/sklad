@@ -176,7 +176,8 @@
 
         <button id="shareTextBtn" class="share-btn hidden">Отправить в Telegram</button>
         
-        <button id="navPrevBtn" class="secondary hidden">Назад</button>
+        <!-- Кнопка возврата всегда видна внизу чек-листа -->
+        <button id="navPrevBtn" class="secondary">Назад</button>
         
         <!-- Глобальная кнопка завершения (на всех страницах) -->
         <button id="resetAllBtn" class="danger-btn">Завершить</button>
@@ -206,7 +207,7 @@
     </div>
   </div>
 
-  <footer>PWA | ТО ПУРГ | v7.0</footer>
+  <footer>PWA | ТО ПУРГ | v8.1</footer>
 </div>
 
 <!-- МОДАЛКА ПРОСМОТРА МЕДИА -->
@@ -283,7 +284,7 @@
 
   // ---- IndexedDB База Данных ----
   let db;
-  const dbRequest = indexedDB.open("PurgPWA_DB", 6);
+  const dbRequest = indexedDB.open("PurgPWA_DB", 8);
   dbRequest.onupgradeneeded = (e) => {
     const database = e.target.result;
     if (!database.objectStoreNames.contains("archives")) { database.createObjectStore("archives", { keyPath: "name" }); }
@@ -293,30 +294,30 @@
   dbRequest.onsuccess = (e) => { db = e.target.result; checkDraft(); };
   dbRequest.onerror = (e) => console.error("IndexedDB error", e);
 
-  // ---- АЛГОРИТМ ТЗ: Нумерация от 1 до 17 ----
+  // ---- АЛГОРИТМ ТЗ: Нумерация от 1 до 17 и русские названия файлов ----
   const mandatoryConfig = [
     // СТРАНИЦА 1
-    { title: "1. Фото ключа ПУРГ", prefix: "01_key", needsPhoto: true, page: 1 },
-    { title: "2. Общее фото ПУРГ до всех работ (вместе с травой и т.д.)", prefix: "02_before", needsPhoto: true, page: 1 },
-    { title: "3. Проверка замков на дверях", prefix: "03_locks", needsComment: true, page: 1 },
-    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", prefix: "04_grass", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", page: 1 },
+    { title: "1. Фото ключа ПУРГ", prefix: "01_key", filePrefix: "01_Ключ", needsPhoto: true, page: 1 },
+    { title: "2. Общее фото ПУРГ до всех работ (вместе с травой и т.д.)", prefix: "02_before", filePrefix: "02_Общее_фото_до", needsPhoto: true, page: 1 },
+    { title: "3. Проверка замков на дверях", prefix: "03_locks", filePrefix: "03_Замки", needsComment: true, page: 1 },
+    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", prefix: "04_grass", filePrefix: "04_Покос", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", page: 1 },
 
     // СТРАНИЦА 2
-    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", prefix: "06_gas_1", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], page: 2 },
-    { title: "6. Проверка работоспособности освещения в ПУРГ.", prefix: "07_light", needsComment: true, page: 2 },
-    { title: "7. Общее фото ПУРГ изнутри (ветки, байпас, мусор).", prefix: "08_inside_before", needsPhoto: true, page: 2 },
-    { title: "8. Уборка мусора внутри ПУРГ. Фото после уборки.", prefix: "09_cleanup", needsPhoto: true, options: ["Уборка выполнена", "Уборка не требуется"], page: 2 },
-    { title: "9. Проверка работоспособности кранов внутри и снаружи.", prefix: "11_valves", needsComment: true, page: 2 },
+    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", prefix: "06_gas_1", filePrefix: "05_Утечки_до", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], condPhotoFor: ["Обнаружена утечка"], customAddBtns: [{ icon: "📸", text: "Фото утечки" }], page: 2 },
+    { title: "6. Проверка работоспособности освещения в ПУРГ.", prefix: "07_light", filePrefix: "06_Освещение", needsComment: true, page: 2 },
+    { title: "7. Общее фото ПУРГ изнутри (ветки, байпас, мусор).", prefix: "08_inside_before", filePrefix: "07_Внутри_до", needsPhoto: true, page: 2 },
+    { title: "8. Уборка мусора внутри ПУРГ. Фото после уборки.", prefix: "09_cleanup", filePrefix: "08_Уборка", needsPhoto: true, options: ["Уборка выполнена", "Уборка не требуется"], page: 2 },
+    { title: "9. Проверка работоспособности кранов внутри и снаружи.", prefix: "11_valves", filePrefix: "09_Краны", needsComment: true, page: 2 },
 
     // СТРАНИЦА 3
-    { title: "10. Замер давления. Проверка манометров (с фото).", prefix: "12_pressure", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон" }, { icon: "📸", text: "Приборы" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
-    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", prefix: "14_filter", needsPhoto: true, options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
-    { title: "12. Проверка переключения на нужную ветку (лето/зима).", prefix: "15_branches", options: ["Ветка зима", "Ветка лето", "Только одна ветка"], page: 3 },
-    { title: "13. Проверка работоспособности счетчиков и корректоров.", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", needsPhoto: true, customAddBtns: [{ icon: "🎥", text: "Видео", isVideo: true }, { icon: "📸", text: "Пломбы" }, { icon: "📸", text: "Масло" }, { icon: "📸", text: "Экраны" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
-    { title: "14. Скачивание архивов с корректоров.", prefix: "17_archives", options: ["Архивы скачаны", "Архив не скачан"], condCommentFor: ["Архив не скачан"], page: 3 },
-    { title: "15. Проверка наличия заземлений и их подключения (с фото).", prefix: "18_grounding", needsPhoto: true, options: ["Есть заземление", "Нет заземления"], condCommentFor: ["Нет заземления"], page: 3 },
-    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", prefix: "19_gas_2", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
-    { title: "17. Дополнительные примечания.", prefix: "21_notes", needsComment: true, isOptional: true, page: 3 }
+    { title: "10. Замер давления. Проверка манометров (с фото).", prefix: "12_pressure", filePrefix: "10_Давление", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон" }, { icon: "📸", text: "Приборы" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
+    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", prefix: "14_filter", filePrefix: "11_Фильтр", needsPhoto: true, options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
+    { title: "12. Проверка переключения на нужную ветку (лето/зима).", prefix: "15_branches", filePrefix: "12_Ветки", options: ["Ветка зима", "Ветка лето", "Только одна ветка"], page: 3 },
+    { title: "13. Проверка работоспособности счетчиков и корректоров.", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", filePrefix: "13_Счетчики_Корректоры", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Общий вид" }, { icon: "🎥", text: "Видео", isVideo: true }, { icon: "📸", text: "Пломбы" }, { icon: "📸", text: "Масло" }, { icon: "📸", text: "Экраны" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
+    { title: "14. Скачивание архивов с корректоров.", prefix: "17_archives", filePrefix: "14_Архивы", options: ["Архивы скачаны", "Архив не скачан"], condCommentFor: ["Архив не скачан"], page: 3 },
+    { title: "15. Проверка наличия заземлений и их подключения (с фото).", prefix: "18_grounding", filePrefix: "15_Заземление", needsPhoto: true, options: ["Есть заземление", "Нет заземления"], condCommentFor: ["Нет заземления"], page: 3 },
+    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", prefix: "19_gas_2", filePrefix: "16_Утечки_после", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
+    { title: "17. Дополнительные примечания.", prefix: "21_notes", filePrefix: "17_Примечания", needsComment: true, isOptional: true, page: 3 }
   ];
 
   // ---- СТЕЙТ ПРИЛОЖЕНИЯ ----
@@ -397,7 +398,6 @@
     return d.toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}); 
   }
 
-  // Сохранение и загрузка черновика (Blob напрямую для видео поддерживается IndexedDB)
   function saveDraft() {
     if (!db) return;
     const draftState = {
@@ -428,7 +428,6 @@
         
         if (d.media) { 
             state.media = d.media; 
-            // Восстанавливаем Object URL для видео, если они хранились как File
             state.media.forEach(arr => {
                 arr.forEach(m => {
                     if (m.type === 'video' && m.fileObj && !m.dataUrl) {
@@ -462,7 +461,6 @@
     };
   }
 
-  // Геолокация
   function startActiveGeoSearch() {
     if (state.gpsLocked) return;
     if (!navigator.geolocation) { state.coordinates = { error: "GPS недоступен" }; displayCoords.className = "geo-status-badge geo-error"; displayCoords.innerText = "GPS недоступен"; saveDraft(); return; }
@@ -481,7 +479,6 @@
     }, 20000);
   }
 
-  // Синхронизация с Firebase
   function syncPendingRecords() {
     if (!navigator.onLine || !db || !fbDb) return;
     db.transaction("pending_sync", "readonly").objectStore("pending_sync").getAll().onsuccess = (e) => {
@@ -519,10 +516,18 @@
       headerDiv.className = 'photo-header';
       
       let metaHtml = '';
-      if (cfg.needsPhoto) {
+      if (cfg.needsPhoto || cfg.condPhotoFor) {
           let errText = "Фото не загружены *";
           if (cfg.customAddBtns && cfg.customAddBtns.some(b => b.isVideo)) errText = "Файлы не загружены *";
-          metaHtml = hasMedia ? `<div class="photo-meta">Загружено файлов: ${mediaArray.length}</div>` : `<div class="photo-meta" style="color:#ef4444;">${errText}</div>`;
+          
+          if (cfg.condPhotoFor) {
+               const isConditionMet = cfg.condPhotoFor.includes(state.selections[cfg.prefix]);
+               if (isConditionMet) {
+                   metaHtml = hasMedia ? `<div class="photo-meta">Загружено файлов: ${mediaArray.length}</div>` : `<div class="photo-meta" style="color:#ef4444;">${errText}</div>`;
+               }
+          } else {
+               metaHtml = hasMedia ? `<div class="photo-meta">Загружено файлов: ${mediaArray.length}</div>` : `<div class="photo-meta" style="color:#ef4444;">${errText}</div>`;
+          }
       }
       
       headerDiv.innerHTML = `<div><div class="photo-title">${cfg.title}</div>
@@ -583,12 +588,88 @@
           }
           condCommentWrap.appendChild(condTxt);
 
+          // Контейнер условного фото (например пункт 5)
+          let condPhotoWrap = null;
+          if (cfg.condPhotoFor) {
+              condPhotoWrap = document.createElement('div');
+              condPhotoWrap.style.display = 'flex';
+              condPhotoWrap.style.flexDirection = 'column';
+              condPhotoWrap.style.gap = '8px';
+              condPhotoWrap.style.marginTop = '4px';
+              
+              const btnsToRender = cfg.customAddBtns || [{ icon: "➕", text: "Добавить" }];
+              
+              btnsToRender.forEach((btn, subIdx) => {
+                  const rowWrapper = document.createElement('div');
+                  rowWrapper.className = 'media-section';
+                  
+                  const relevantMedia = mediaArray ? mediaArray.map((m, originalIndex) => ({...m, originalIndex})).filter(m => (m.subIdx === subIdx) || (m.subIdx === undefined && subIdx === 0)) : [];
+                  const hasSubMedia = relevantMedia.length > 0;
+
+                  const placeholder = document.createElement('div');
+                  placeholder.className = 'add-photo-placeholder';
+                  if (hasSubMedia) placeholder.classList.add('valid');
+                  placeholder.innerHTML = `<span>${btn.icon}</span>${btn.text}`;
+                  
+                  placeholder.onclick = () => { 
+                      state.currentActiveIndex = idx; 
+                      state.currentActiveSubIndex = subIdx; 
+                      if (btn.isVideo) globalVideoInput.click();
+                      else globalFileInput.click(); 
+                  };
+                  rowWrapper.appendChild(placeholder);
+
+                  const photosRow = document.createElement('div');
+                  photosRow.className = 'media-photos-row';
+                  
+                  if (hasSubMedia) {
+                      relevantMedia.forEach(mData => {
+                          const pContainer = document.createElement('div'); 
+                          pContainer.className = 'photo-container';
+                          
+                          let previewSrc = mData.dataUrl;
+                          if (mData.type === 'video' && mData.fileObj) previewSrc = URL.createObjectURL(mData.fileObj);
+                          
+                          let mediaEl;
+                          if (mData.type === 'video') {
+                              mediaEl = document.createElement('video');
+                              mediaEl.src = previewSrc;
+                              mediaEl.className = 'thumbnail';
+                              mediaEl.muted = true;
+                              mediaEl.onclick = (e) => { e.stopPropagation(); openLightbox(previewSrc, 'video'); };
+                          } else {
+                              mediaEl = document.createElement('img');
+                              mediaEl.src = previewSrc;
+                              mediaEl.className = 'thumbnail';
+                              mediaEl.onclick = (e) => { e.stopPropagation(); openLightbox(previewSrc, 'image'); };
+                          }
+                          
+                          const delBtn = document.createElement('button'); 
+                          delBtn.className = 'delete-btn'; 
+                          delBtn.innerHTML = '&times;'; 
+                          delBtn.onclick = (e) => { e.stopPropagation(); removeMedia(idx, mData.originalIndex); };
+                          
+                          pContainer.appendChild(mediaEl); 
+                          pContainer.appendChild(delBtn); 
+                          photosRow.appendChild(pContainer);
+                      });
+                  } else {
+                      photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">Ожидание файлов...</div>`;
+                  }
+                  
+                  rowWrapper.appendChild(photosRow);
+                  condPhotoWrap.appendChild(rowWrapper);
+              });
+          }
+
           const checkCondition = () => {
               const selected = state.selections[cfg.prefix];
-              if (cfg.condCommentFor && cfg.condCommentFor.includes(selected)) {
-                  condCommentWrap.style.display = 'block';
-              } else {
-                  condCommentWrap.style.display = 'none';
+              const showComment = cfg.condCommentFor && cfg.condCommentFor.includes(selected);
+              condCommentWrap.style.display = showComment ? 'block' : 'none';
+              
+              if (condPhotoWrap) {
+                  const showPhoto = cfg.condPhotoFor && cfg.condPhotoFor.includes(selected);
+                  condPhotoWrap.style.display = showPhoto ? 'flex' : 'none';
               }
           };
           checkCondition();
@@ -611,6 +692,7 @@
 
           item.appendChild(optionsDiv);
           item.appendChild(condCommentWrap);
+          if(condPhotoWrap) item.appendChild(condPhotoWrap);
       } 
       // Безусловное поле для комментария
       else if (cfg.needsComment) {
@@ -639,8 +721,8 @@
           item.appendChild(txt);
       }
 
-      // Блок прикрепления медиа
-      if (cfg.needsPhoto) {
+      // Блок безусловного прикрепления медиа
+      if (cfg.needsPhoto && !cfg.condPhotoFor) {
           const mediaContainer = document.createElement('div');
           mediaContainer.style.display = 'flex';
           mediaContainer.style.flexDirection = 'column';
@@ -656,7 +738,6 @@
               const relevantMedia = mediaArray ? mediaArray.map((m, originalIndex) => ({...m, originalIndex})).filter(m => (m.subIdx === subIdx) || (m.subIdx === undefined && subIdx === 0)) : [];
               const hasSubMedia = relevantMedia.length > 0;
 
-              // Кнопка-плейсхолдер
               const placeholder = document.createElement('div');
               placeholder.className = 'add-photo-placeholder';
               
@@ -666,15 +747,11 @@
               placeholder.onclick = () => { 
                   state.currentActiveIndex = idx; 
                   state.currentActiveSubIndex = subIdx; 
-                  if (btn.isVideo) {
-                      globalVideoInput.click();
-                  } else {
-                      globalFileInput.click(); 
-                  }
+                  if (btn.isVideo) globalVideoInput.click();
+                  else globalFileInput.click(); 
               };
               rowWrapper.appendChild(placeholder);
 
-              // Зона для фотографий
               const photosRow = document.createElement('div');
               photosRow.className = 'media-photos-row';
               
@@ -684,6 +761,7 @@
                       pContainer.className = 'photo-container';
                       
                       let previewSrc = mData.dataUrl;
+                      if (mData.type === 'video' && mData.fileObj) previewSrc = URL.createObjectURL(mData.fileObj);
                       
                       let mediaEl;
                       if (mData.type === 'video') {
@@ -708,6 +786,8 @@
                       pContainer.appendChild(delBtn); 
                       photosRow.appendChild(pContainer);
                   });
+              } else {
+                  photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">Ожидание файлов...</div>`;
               }
               
               rowWrapper.appendChild(photosRow);
@@ -733,7 +813,11 @@
 
         if (cfg.isCheckbox && !state.checkboxes[cfg.prefix]) currentValid = false;
         
-        if (cfg.needsPhoto) {
+        let requiresPhoto = false;
+        if (cfg.needsPhoto && !cfg.condPhotoFor) requiresPhoto = true;
+        if (cfg.condPhotoFor && cfg.condPhotoFor.includes(state.selections[cfg.prefix])) requiresPhoto = true;
+
+        if (requiresPhoto) {
             if (!state.media[idx] || state.media[idx].length === 0) {
                 currentValid = false;
             } else {
@@ -763,7 +847,8 @@
 
     if (state.currentPage === 1) {
         navNextBtn.classList.remove('hidden'); 
-        navPrevBtn.classList.add('hidden');
+        navPrevBtn.classList.remove('hidden'); // Кнопка Назад на первой странице
+        navPrevBtn.innerText = "К данным ПУРГ";
         generateReportBtn.classList.add('hidden');
         navNextBtn.disabled = !currentValid;
         
@@ -773,6 +858,7 @@
     else if (state.currentPage === 2) {
         navNextBtn.classList.remove('hidden'); 
         navPrevBtn.classList.remove('hidden'); 
+        navPrevBtn.innerText = "Назад";
         generateReportBtn.classList.add('hidden');
         navNextBtn.disabled = !currentValid;
 
@@ -782,6 +868,7 @@
     else if (state.currentPage === 3) {
         navNextBtn.classList.add('hidden');
         navPrevBtn.classList.remove('hidden'); 
+        navPrevBtn.innerText = "Назад";
         
         if (state.isReportGenerated) {
             generateReportBtn.classList.add('hidden');
@@ -805,7 +892,11 @@
   });
 
   navPrevBtn.addEventListener('click', () => {
-      if(state.currentPage > 1) {
+      if(state.currentPage === 1) {
+          // Возврат на стартовый экран с формы 1
+          checklistScreen.classList.add('hidden');
+          formScreen.classList.remove('hidden');
+      } else if(state.currentPage > 1) {
           state.currentPage--;
           saveDraft(); renderChecklist(); window.scrollTo(0, 0);
       }
@@ -822,10 +913,8 @@
         let file = files[i];
 
         if (file.type.startsWith('video/')) {
-            // Для видео сохраняем исходный файл. Он НЕ попадет в ZIP, а прикрепится рядом.
             state.media[idx].push({ type: 'video', subIdx: subIdx, fileObj: file, dataUrl: URL.createObjectURL(file) });
         } else {
-            // Изображения сжимаем
             await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -866,69 +955,85 @@
     renderChecklist(); 
   }
   
-  // Генерация текстового отчета
+  // Генерация красивого текстового отчета
   function buildEmailBodyText() {
-    let text = `ОТЧЕТ ТО ПУРГ\n`;
-    text += `==============================\n`;
-    text += `Наименование: ${state.purgName}\n`;
-    text += `Адрес: ${state.address}\n`;
-    text += `Исполнитель: ${state.installerName}\n`;
-    text += `Дата: ${formatDateTime(state.creationDate)}\n`;
-    text += `GPS: ${(state.coordinates && !state.coordinates.error) ? state.coordinates.lat.toFixed(6) + ', ' + state.coordinates.lng.toFixed(6) : 'Нет'}\n`;
-    text += `==============================\n\n`;
+    let text = `=======================================\n`;
+    text += `ОТЧЕТ ТО ПУРГ\n`;
+    text += `=======================================\n\n`;
+    
+    text += `📄 ИНФОРМАЦИЯ ОБ ОБЪЕКТЕ:\n`;
+    text += `• Наименование: ${state.purgName}\n`;
+    text += `• Адрес: ${state.address}\n`;
+    text += `• Исполнитель: ${state.installerName}\n`;
+    text += `• Дата: ${formatDateTime(state.creationDate)}\n`;
+    text += `• GPS Координаты: ${(state.coordinates && !state.coordinates.error) ? state.coordinates.lat.toFixed(6) + ', ' + state.coordinates.lng.toFixed(6) : 'Не зафиксированы'}\n`;
+    
+    text += `\n=======================================\n`;
+    text += `🛠️ ХОД ВЫПОЛНЕНИЯ РАБОТ:\n`;
+    text += `=======================================\n\n`;
     
     mandatoryConfig.forEach((cfg, idx) => {
-        text += `--- ${cfg.title} ---\n`;
+        text += `[${cfg.title}]\n`;
         if (cfg.isCheckbox) {
-            text += `Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
+            text += `   — Статус: ${state.checkboxes[cfg.prefix] ? 'Выполнено' : 'Не выполнено'}\n`;
         }
         if (cfg.options && state.selections[cfg.prefix]) {
-            text += `Выбор: ${state.selections[cfg.prefix]}\n`;
+            text += `   — Статус: ${state.selections[cfg.prefix]}\n`;
         }
         if (state.comments[cfg.prefix]) {
-            text += `Комментарий: ${state.comments[cfg.prefix]}\n`;
+            text += `   — Комментарий: ${state.comments[cfg.prefix]}\n`;
         }
-        if (cfg.needsPhoto && state.media[idx]) {
+        
+        let requiresPhoto = false;
+        if (cfg.needsPhoto && !cfg.condPhotoFor) requiresPhoto = true;
+        if (cfg.condPhotoFor && cfg.condPhotoFor.includes(state.selections[cfg.prefix])) requiresPhoto = true;
+        
+        if (requiresPhoto && state.media[idx]) {
             if (cfg.customAddBtns) {
                 cfg.customAddBtns.forEach((btn, subIdx) => {
                     const count = state.media[idx].filter(m => m.subIdx === subIdx || (m.subIdx === undefined && subIdx === 0)).length;
-                    text += `${btn.text.replace('📸 ','').replace('🎥 ','')}: ${count} шт.\n`;
+                    const cleanName = btn.text.replace('📸 ','').replace('🎥 ','');
+                    text += `   — ${cleanName}: прикреплено ${count} шт.\n`;
                 });
             } else {
-                text += `Прикреплено файлов: ${state.media[idx].length}\n`;
+                text += `   — Прикреплено файлов: ${state.media[idx].length} шт.\n`;
             }
         }
         text += '\n';
     });
     
-    text += `\n* Примечание: Видеозаписи (если есть) отправляются отдельными файлами вместе с архивом.`;
+    text += `=======================================\n`;
+    text += `* Примечание: Видеозаписи отправляются отдельными файлами вместе с архивом.\n`;
     return text;
   }
 
-  // Сборка ZIP архива (БЕЗ ВИДЕО)
+  // Сборка ZIP архива (МГНОВЕННО, БЕЗ ВИДЕО)
   generateBtn.addEventListener('click', async () => {
     generateBtn.disabled = true;
     const emailBodyText = buildEmailBodyText();
     
     try {
       const zip = new JSZip();
-      zip.file('report_info.txt', new TextEncoder().encode(emailBodyText));
+      zip.file('Отчет_ТО_ПУРГ.txt', new TextEncoder().encode(emailBodyText));
       
-      let videosToAttach = []; // Собираем видео отдельно
+      let videosToAttach = [];
 
       mandatoryConfig.forEach((cfg, idx) => { 
         if (state.media[idx]) {
             state.media[idx].forEach((mData, pIdx) => { 
                 let btnSlug = "";
                 if (cfg.customAddBtns && mData.subIdx !== undefined) {
-                     btnSlug = `_cat${mData.subIdx + 1}`;
+                     const rawText = cfg.customAddBtns[mData.subIdx].text;
+                     btnSlug = `_${rawText.replace(/[^a-zа-яё0-9]/gi, '_')}`;
                 }
                 
+                const safePrefix = cfg.filePrefix || cfg.prefix;
+                
                 if (mData.type === 'video' && mData.fileObj) {
-                    const fileName = `${cfg.prefix}${btnSlug}_${pIdx + 1}.mp4`;
+                    const fileName = `${safePrefix}${btnSlug}_${pIdx + 1}.mp4`;
                     videosToAttach.push({ name: fileName, blob: mData.fileObj });
                 } else if (mData.dataUrl) {
-                    const fileName = `${cfg.prefix}${btnSlug}_${pIdx + 1}.jpg`;
+                    const fileName = `${safePrefix}${btnSlug}_${pIdx + 1}.jpg`;
                     const b64Data = mData.dataUrl.split(',')[1];
                     zip.file(fileName, b64Data, {base64: true}); 
                 }
@@ -936,14 +1041,13 @@
         }
       });
       
-      const zipContentUint8 = await zip.generateAsync({ type: "uint8array", compression: "STORE" }, function updateCallback(metadata) {
-          generateBtn.innerText = `Сборка архива: ${Math.round(metadata.percent)}%`;
-      });
+      const zipContentUint8 = await zip.generateAsync({ type: "uint8array", compression: "STORE" });
       
       const d = new Date(state.creationDate); 
       const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       let sanitizedName = state.purgName.replace(/[^a-zа-яё0-9]/gi, '_').substring(0, 24);
-      currentZipName = `ТО_${sanitizedName}_${dateStr}.zip`;
+      
+      currentZipName = `${sanitizedName}_${dateStr}.zip`;
 
       const fbReportData = { 
         purgName: state.purgName, address: state.address, installer: state.installerName, 
@@ -975,7 +1079,6 @@
         tx.onerror = function(err) { alert("Сбой записи в БД. Освободите память устройства."); resetGenBtn(); };
         tx.onabort = function(err) { alert("Сохранение прервано системой."); resetGenBtn(); };
 
-        // Сохраняем ZIP и отдельно массив видео
         tx.objectStore("archives").put({ 
           name: currentZipName, 
           base64: base64Data, 
@@ -993,7 +1096,7 @@
     const req = db.transaction("archives", "readonly").objectStore("archives").get(currentZipName);
     req.onsuccess = (e) => {
        const result = e.target.result;
-       if (result) { shareFiles([result], `ТО ПУРГ: ${state.purgName}`); }
+       if (result) { shareFiles([result], `ТО: ${state.purgName}`); }
        else { alert("Файл не найден в базе."); }
     };
   });
@@ -1090,7 +1193,6 @@
   async function shareFiles(filesDataArray, subjectText) {
     const filesToShare = [];
     
-    // Собираем ZIP и Видео в один массив для отправки
     filesDataArray.forEach(f => {
       if (f.base64) { 
           let zipBlob = new Blob([base64ToUint8(f.base64)], { type: "application/zip" }); 
@@ -1111,7 +1213,6 @@
       } catch (err) { console.log("Share skipped/failed"); }
     }
 
-    // Если отправка не удалась (например, на ПК), просто скачиваем
     filesDataArray.forEach(f => {
       if (f.base64) {
           let fileBlob = new Blob([base64ToUint8(f.base64)], { type: "application/zip" });

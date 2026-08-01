@@ -207,7 +207,7 @@
     </div>
   </div>
 
-  <footer>PWA | ТО ПУРГ | v8.4</footer>
+  <footer>PWA | ТО ПУРГ | v8.5</footer>
 </div>
 
 <!-- МОДАЛКА ПРОСМОТРА МЕДИА -->
@@ -233,7 +233,6 @@
 
 <!-- ГЛОБАЛЬНЫЕ ИНПУТЫ ДЛЯ ФАЙЛОВ -->
 <input type="file" id="globalFileInput" accept="image/jpeg,image/png,image/heic,image/*" multiple class="hidden">
-<!-- Убран атрибут capture="environment" чтобы на iPhone можно было выбрать видео из медиатеки -->
 <input type="file" id="globalVideoInput" accept="video/mp4,video/quicktime,video/webm,video/*" multiple class="hidden">
 
 <script>
@@ -300,19 +299,19 @@
     { title: "1. Фото ключа ПУРГ", shortTitle: "Фото ключа", prefix: "01_key", filePrefix: "01_Ключ", needsPhoto: true, page: 1 },
     { title: "2. Общее фото ПУРГ до всех работ (вместе с травой и т.д.)", shortTitle: "Общее фото до работ", prefix: "02_before", filePrefix: "02_Общее_фото_до", needsPhoto: true, page: 1 },
     { title: "3. Проверка замков на дверях", shortTitle: "Проверка замков на дверях", prefix: "03_locks", filePrefix: "03_Замки", options: ["Замки исправны", "Замки неисправны"], condCommentFor: ["Замки неисправны"], page: 1 },
-    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", shortTitle: "Покос травы", prefix: "04_grass", filePrefix: "04_Покос", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", page: 1 },
-    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", shortTitle: "Поиск утечек (до начала работ)", prefix: "06_gas_1", filePrefix: "05_Утечки_до", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], condPhotoFor: ["Обнаружена утечка"], customAddBtns: [{ icon: "📸", text: "Фото утечки" }], page: 2 },
+    { title: "4. Покос травы на территории ПУРГ. Общее фото после покоса.", shortTitle: "Покос травы", prefix: "04_grass", filePrefix: "04_Покос", needsPhoto: true, isCheckbox: true, checkboxLabel: "Покос выполнен", logShortWord: "Покос", page: 1 },
+    { title: "5. Замер газоанализатором внутри ПУРГ и поиск утечек (до начала работ).", shortTitle: "Поиск утечек", prefix: "06_gas_1", filePrefix: "05_Утечки_до", options: ["Утечек нет", "Обнаружена утечка"], condCommentFor: ["Обнаружена утечка"], condPhotoFor: ["Обнаружена утечка"], customAddBtns: [{ icon: "📸", text: "Фото утечки", hint: "" }], page: 2 },
     { title: "6. Проверка работоспособности освещения в ПУРГ.", shortTitle: "Проверка освещения", prefix: "07_light", filePrefix: "06_Освещение", needsComment: true, page: 2 },
     { title: "7. Общее фото ПУРГ изнутри (ветки, байпас, мусор).", shortTitle: "Общее фото внутри", prefix: "08_inside_before", filePrefix: "07_Внутри_до", needsPhoto: true, page: 2 },
     { title: "8. Уборка мусора внутри ПУРГ. Фото после уборки.", shortTitle: "Уборка мусора", prefix: "09_cleanup", filePrefix: "08_Уборка", needsPhoto: true, options: ["Уборка выполнена", "Уборка не требуется"], page: 2 },
     { title: "9. Проверка работоспособности кранов внутри и снаружи.", shortTitle: "Проверка запорных кранов", prefix: "11_valves", filePrefix: "09_Краны", needsComment: true, page: 2 },
-    { title: "10. Замер давления. Проверка манометров (с фото).", shortTitle: "Замер давления", prefix: "12_pressure", filePrefix: "10_Давление", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон" }, { icon: "📸", text: "Приборы" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
-    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", shortTitle: "Проверка фильтра", prefix: "14_filter", filePrefix: "11_Фильтр", needsPhoto: true, options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
+    { title: "10. Замер давления. Проверка манометров (с фото).", shortTitle: "Замер давления", prefix: "12_pressure", filePrefix: "10_Давление", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Эталон", hint: "Фото эталонного манометра" }, { icon: "📸", text: "Приборы", hint: "Фото манометров ПУРГ" }], options: ["Все исправно", "Неисправно"], condCommentFor: ["Неисправно"], page: 3 },
+    { title: "11. Проверка состояния газового фильтра и перепада (с фото).", shortTitle: "Проверка фильтра", prefix: "14_filter", filePrefix: "11_Фильтр", needsPhoto: true, fileHint: "Фото фильтра, датчика фильтра", options: ["Фильтр чист", "Загрязнен", "Неисправен"], condCommentFor: ["Загрязнен", "Неисправен"], page: 3 },
     { title: "12. Переключение на нужную ветку (лето/зима).", shortTitle: "Переключение на нужную ветку", prefix: "15_branches", filePrefix: "12_Ветки", options: ["Переключил на ветку \"лето\"", "Переключил на ветку \"зима\"", "Ветка не переключалась (только одна)"], page: 3 },
-    { title: "13. Проверка работоспособности счетчиков и корректоров.", shortTitle: "Проверка счетчиков и корректоров", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", filePrefix: "13_Счетчики_Корректоры", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Общий вид" }, { icon: "🎥", text: "Видео", isVideo: true }, { icon: "📸", text: "Пломбы" }, { icon: "📸", text: "Масло", optionalCheckbox: "Без масла" }, { icon: "📸", text: "Экраны" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
+    { title: "13. Проверка работоспособности счетчиков и корректоров.", shortTitle: "Проверка счетчиков и корректоров", hint: "Счетчики: вращение, пломбы, масло. Корректоры: батарея, пломбы, датчики, показания.", prefix: "16_meters", filePrefix: "13_Счетчики_Корректоры", needsPhoto: true, customAddBtns: [{ icon: "📸", text: "Общий вид", hint: "Фото счетчика/корректора" }, { icon: "🎥", text: "Видео", isVideo: true, hint: "Видео вращения/изменения показаний" }, { icon: "📸", text: "Пломбы", hint: "Фото наличия пломб" }, { icon: "📸", text: "Масло", optionalCheckbox: "Без масла", hint: "Фото наличия масла (если есть)" }, { icon: "📸", text: "Экраны", hint: "Фото экранов корректора" }], options: ["Все работает", "Неисправность"], condCommentFor: ["Неисправность"], page: 3 },
     { title: "14. Скачивание архивов с корректоров.", shortTitle: "Скачивание архивов", prefix: "17_archives", filePrefix: "14_Архивы", options: ["Архивы скачаны", "Архив не скачан"], condCommentFor: ["Архив не скачан"], page: 3 },
-    { title: "15. Проверка наличия заземлений и их подключения (с фото).", shortTitle: "Проверка наличия заземлений", prefix: "18_grounding", filePrefix: "15_Заземление", needsPhoto: true, options: ["Есть заземление", "Нет заземления"], condCommentFor: ["Нет заземления"], page: 3 },
-    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", shortTitle: "Повторный замер газоанализатором внутри ПУРГ", prefix: "19_gas_2", filePrefix: "16_Утечки_после", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
+    { title: "15. Проверка наличия заземлений и их подключения (с фото).", shortTitle: "Проверка наличия заземлений", prefix: "18_grounding", filePrefix: "15_Заземление", needsPhoto: true, options: ["заземление есть", "заземление сделал", "заземления нет"], condCommentFor: ["заземления нет"], page: 3 },
+    { title: "16. Повторный замер газоанализатором внутри ПУРГ.", shortTitle: "Повторный поиск утечек", prefix: "19_gas_2", filePrefix: "16_Утечки_после", options: ["Утечка отсутствует", "Утечка устранена", "Утечка есть"], condCommentFor: ["Утечка есть"], page: 3 },
     { title: "17. Дополнительные примечания.", shortTitle: "Дополнительные примечания", prefix: "21_notes", filePrefix: "17_Примечания", needsComment: true, isOptional: true, page: 3 }
   ];
 
@@ -616,7 +615,7 @@
               condPhotoWrap.style.gap = '8px';
               condPhotoWrap.style.marginTop = '4px';
               
-              const btnsToRender = cfg.customAddBtns || [{ icon: "➕", text: "Добавить" }];
+              const btnsToRender = cfg.customAddBtns || [{ icon: "➕", text: "Добавить", hint: "" }];
               
               btnsToRender.forEach((btn, subIdx) => {
                   const rowWrapper = document.createElement('div');
@@ -718,7 +717,8 @@
                           photosRow.appendChild(pContainer);
                       });
                   } else {
-                      photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">Ожидание файлов...</div>`;
+                      let hintText = btn.hint || "";
+                      photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">${hintText}</div>`;
                   }
                   
                   rowWrapper.appendChild(photosRow);
@@ -793,7 +793,7 @@
           mediaContainer.style.gap = '8px';
           mediaContainer.style.marginTop = '4px';
           
-          const btnsToRender = cfg.customAddBtns || [{ icon: "➕", text: "Добавить" }];
+          const btnsToRender = cfg.customAddBtns || [{ icon: "➕", text: "Добавить", hint: "" }];
           
           btnsToRender.forEach((btn, subIdx) => {
               const rowWrapper = document.createElement('div');
@@ -896,7 +896,8 @@
                       photosRow.appendChild(pContainer);
                   });
               } else {
-                  photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">Ожидание файлов...</div>`;
+                  let hintText = btn.hint || cfg.fileHint || "";
+                  photosRow.innerHTML = `<div style="width:100%; color:#94a3b8; font-size:0.8rem; margin-left: 8px;">${hintText}</div>`;
               }
               
               rowWrapper.appendChild(photosRow);
@@ -1069,7 +1070,7 @@
     renderChecklist(); 
   }
   
-  // Генерация чистого текстового отчета без воды и с логом
+  // Генерация чистого текстового отчета без воды и с логированием
   function buildEmailBodyText() {
     let text = `• Объект: ${state.purgName}\n`;
     text += `• Адрес: ${state.address}\n`;
@@ -1077,29 +1078,31 @@
     text += `--------------------\n`;
     
     let displayCounter = 1;
-    let logEntries = [];
-    const knownErrorOptions = ["Обнаружена утечка", "Неисправно", "Загрязнен", "Неисправен", "Неисправность", "Архив не скачан", "Нет заземления", "Утечка есть", "Замки неисправны"];
+    let errorLogs = [];
+    let workLogs = [];
+    const knownErrorOptions = ["Обнаружена утечка", "Неисправно", "Загрязнен", "Неисправен", "Неисправность", "Архив не скачан", "заземления нет", "Утечка есть", "Замки неисправны"];
     
     mandatoryConfig.forEach((cfg) => {
         let itemContent = "";
         let hasError = false;
         let safeTitle = cfg.shortTitle || cfg.title.replace(/^\d+\.\s*/, '');
         let cmt = state.comments[cfg.prefix] || '';
-        
         let isOptError = false;
+        let sel = state.selections[cfg.prefix];
 
         // Чекбоксы
         if (cfg.isCheckbox) {
             let checked = state.checkboxes[cfg.prefix];
             if (checked) {
                 itemContent += `• Статус: Выполнено\n`;
-                logEntries.push(`- РАБОТА (П. ${displayCounter}. ${safeTitle}): Выполнено`);
+                if (cfg.logShortWord) {
+                    workLogs.push(`- П${displayCounter}: ${cfg.logShortWord}`);
+                }
             }
         }
         
         // Опции выбора
-        if (cfg.options && state.selections[cfg.prefix]) {
-            let sel = state.selections[cfg.prefix];
+        if (cfg.options && sel) {
             itemContent += `• Статус: ${sel}\n`;
             
             if (knownErrorOptions.includes(sel)) {
@@ -1108,13 +1111,15 @@
             }
             
             // Логирование важных работ
-            if (["Уборка выполнена", "Переключил на ветку \"лето\"", "Переключил на ветку \"зима\"", "Архивы скачаны", "Есть заземление", "Утечка устранена"].includes(sel)) {
-                logEntries.push(`- РАБОТА (П. ${displayCounter}. ${safeTitle}): ${sel}`);
-            }
+            if (sel === "Уборка выполнена") { workLogs.push(`- П${displayCounter}: Уборка`); }
+            if (sel === "Переключил на ветку \"лето\"" || sel === "Переключил на ветку \"зима\"") { workLogs.push(`- П${displayCounter}: Переключение ветки`); }
+            if (sel === "Архивы скачаны") { workLogs.push(`- П${displayCounter}: Скачивание архивов`); }
+            if (sel === "заземление сделал") { workLogs.push(`- П${displayCounter}: Сделал заземление`); }
+            if (sel === "Утечка устранена") { workLogs.push(`- П${displayCounter}: Устранил утечку`); }
         }
         
         // Комментарии и ошибки
-        if (cfg.needsComment || (cfg.condCommentFor && cfg.condCommentFor.includes(state.selections[cfg.prefix]))) {
+        if (cfg.needsComment || (cfg.condCommentFor && cfg.condCommentFor.includes(sel))) {
             if (cmt.trim() !== '') {
                 if (cfg.isOptional) {
                     itemContent += `• Статус: ${cmt}\n`;
@@ -1124,11 +1129,17 @@
                 
                 if (isOptError || isCommentError(cmt)) {
                     hasError = true;
-                    logEntries.push(`- ОШИБКА (П. ${displayCounter}. ${safeTitle}): ${cmt}`);
                 }
             } else if (cfg.isOptional) {
                 itemContent += `• Статус: Дополнительных примечаний нет\n`;
             }
+        }
+        
+        // Сбор логов по ошибкам
+        if (hasError) {
+             let errText = cmt.trim() !== '' ? cmt.trim() : sel;
+             if (!errText) errText = "Неисправность";
+             errorLogs.push(`- П${displayCounter}: ${errText}`);
         }
         
         // Исключаем пустые пункты, где нужно было загрузить только фото
@@ -1140,16 +1151,22 @@
         }
     });
     
+    // Блок логов снизу
+    if (errorLogs.length > 0) {
+        text += `ОШИБКИ:\n`;
+        text += errorLogs.join('\n') + `\n`;
+        text += `--------------------\n`;
+    }
+    
+    if (workLogs.length > 0) {
+        text += `ВЫПОЛНЕННЫЕ РАБОТЫ:\n`;
+        text += workLogs.join('\n') + `\n`;
+        text += `--------------------\n`;
+    }
+
     text += `• Исполнитель: ${state.installerName}\n`;
     text += `• ${formatDateTime(state.creationDate)}\n`;
     
-    // Блок логов снизу
-    if (logEntries.length > 0) {
-        text += `--------------------\n`;
-        text += `ЖУРНАЛ РАБОТ И ОШИБОК:\n`;
-        text += logEntries.join('\n') + `\n`;
-    }
-
     return text;
   }
 
